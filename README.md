@@ -28,12 +28,36 @@ python train.py --config-name=config_multihead # Multi-head Siamese (64.9% acc)
 python train.py                                # Unified Siamese (66.8% acc, default)
 ```
 
-### Configuration Structure
+### Directory Structure
 
-- **Base configs**: `configs/config*.yaml` - Complete configurations for different tasks
-- **Model configs**: `configs/model/*.yaml` - Architecture-specific parameters
-- **Results**: Saved to `results/` directory
-- **Hydra outputs**: Saved to `outputs/` directory with timestamps
+```
+.
+├── configs/              # Configuration files
+│   ├── config*.yaml     # Base configurations for different tasks
+│   └── model/           # Model-specific configurations
+├── data/                # Dataset files (Excel, images)
+├── runs/                # Training outputs (one directory per run)
+│   └── task_model_timestamp/
+│       ├── results.csv  # Detailed results
+│       ├── config.yaml  # Configuration used
+│       └── summary.txt  # Quick summary
+├── artifacts/           # Persistent files across runs
+│   ├── cache/          # Cached embeddings
+│   ├── models/         # Saved model weights
+│   ├── figures/        # Generated plots
+│   └── results/        # Aggregated results
+├── archive/            # Old implementation files (for reference)
+└── train.py           # Main training script
+```
+
+### Output Organization
+
+Each training run creates a timestamped directory in `runs/` containing:
+- **results.csv**: Detailed metrics for each target attribute
+- **config.yaml**: Complete configuration used for reproducibility
+- **summary.txt**: Quick overview of performance metrics
+
+Example: `runs/comparison_siamese_20250915_211516/`
 
 ### Model Architectures
 

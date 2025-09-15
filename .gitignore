@@ -9,14 +9,11 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env
 
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb_checkpoints/
-
-# Data files (if needed to exclude)
-# *.xlsx
-# *.csv
 
 # IDE
 .vscode/
@@ -29,8 +26,39 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
+# Output directories
+runs/
+artifacts/models/
+artifacts/figures/
+artifacts/results/
+outputs/
+results/
+multirun/
+
+# Cache files (keep embeddings cache)
+artifacts/cache/*.pkl
+!artifacts/cache/clip_embeddings_cache.pkl
+
+# Model files
+*.pth
+*.pt
+*.h5
+*.ckpt
+
+# Figures
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
+!artifacts/figures/.gitkeep
+
 # Logs
 *.log
+logs/
+
+# Hydra
+.hydra/
 
 # Database
 *.db

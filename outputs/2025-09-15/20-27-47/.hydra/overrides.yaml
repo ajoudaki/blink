@@ -1,2 +1,0 @@
-- training.epochs=5
-- model.hidden_dims=[128,64]

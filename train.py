@@ -20,15 +20,23 @@ from omegaconf import DictConfig
 import clip
 from PIL import Image
 import matplotlib.pyplot as plt
+from datetime import datetime
+from pathlib import Path
 
 
 # ============================================================================
 # EMBEDDING EXTRACTION
 # ============================================================================
 
-def load_or_extract_embeddings(image_paths, cache_file='clip_embeddings_cache.pkl',
+def load_or_extract_embeddings(image_paths, cache_file=None,
                                device='cuda', force_recompute=False):
     """Load cached embeddings or extract new ones using CLIP."""
+
+    if cache_file is None:
+        cache_file = 'artifacts/cache/clip_embeddings_cache.pkl'
+
+    # Ensure cache directory exists
+    os.makedirs(os.path.dirname(cache_file), exist_ok=True)
 
     if os.path.exists(cache_file) and not force_recompute:
         print(f"Loading embeddings from cache: {cache_file}")
@@ -663,6 +671,14 @@ def main(cfg: DictConfig):
     print(f"Task type: {cfg.task_type}")
     print(f"Model architecture: {cfg.model.architecture}")
 
+    # Create run-specific output directory
+    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_name = f"{cfg.task_type}_{cfg.model.architecture}_{run_id}"
+    run_dir = Path(f"runs/{run_name}")
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"Run directory: {run_dir}")
+
     # Load data based on task type
     if cfg.task_type == 'rating':
         print("\nLoading individual rating data...")
@@ -693,9 +709,13 @@ def main(cfg: DictConfig):
     print(f"Loaded {len(df)} samples with {len(all_images)} unique images")
 
     # Load or extract embeddings
+    cache_file = cfg.data.get('embeddings_cache_file', None)
+    if cache_file and not cache_file.startswith('/'):
+        cache_file = f'artifacts/cache/{cache_file}'
+
     embeddings = load_or_extract_embeddings(
         all_images,
-        cache_file=cfg.data.embeddings_cache_file,
+        cache_file=cache_file,
         device=device,
         force_recompute=cfg.data.get('force_recompute_embeddings', False)
     )
@@ -749,12 +769,39 @@ def main(cfg: DictConfig):
         print(f"Average Accuracy: {avg_acc:.3f}")
         print(f"Average CE Loss: {avg_loss:.3f}")
 
-    # Save results
-    os.makedirs("results", exist_ok=True)
+    # Save results to run directory
     results_df = pd.DataFrame(results).T
-    results_file = f"results/results_{cfg.task_type}_{cfg.model.architecture}.csv"
+    results_file = run_dir / "results.csv"
     results_df.to_csv(results_file)
     print(f"\n✓ Results saved to {results_file}")
+
+    # Save configuration
+    config_file = run_dir / "config.yaml"
+    with open(config_file, 'w') as f:
+        f.write(str(cfg))
+    print(f"✓ Configuration saved to {config_file}")
+
+    # Create summary file
+    summary_file = run_dir / "summary.txt"
+    with open(summary_file, 'w') as f:
+        f.write(f"Run: {run_name}\n")
+        f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"Task: {cfg.task_type}\n")
+        f.write(f"Model: {cfg.model.architecture}\n")
+        f.write("-" * 50 + "\n")
+
+        if cfg.task_type == 'rating':
+            avg_mae = np.mean([r['mae'] for r in results.values()])
+            avg_rmse = np.mean([r['rmse'] for r in results.values()])
+            f.write(f"Average MAE: {avg_mae:.3f}\n")
+            f.write(f"Average RMSE: {avg_rmse:.3f}\n")
+        else:
+            avg_acc = np.mean([r['accuracy'] for r in results.values()])
+            avg_loss = np.mean([r['ce_loss'] for r in results.values()])
+            f.write(f"Average Accuracy: {avg_acc:.3f}\n")
+            f.write(f"Average CE Loss: {avg_loss:.3f}\n")
+
+    print(f"✓ Summary saved to {summary_file}")
 
 
 if __name__ == "__main__":
