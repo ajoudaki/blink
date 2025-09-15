@@ -113,6 +113,37 @@ class BaseEncoder(nn.Module):
                     block.append(nn.Tanh())
                 elif activation == 'leaky_relu':
                     block.append(nn.LeakyReLU())
+                elif activation == 'silu':
+                    block.append(nn.SiLU())
+                elif activation == 'mish':
+                    block.append(nn.Mish())
+                elif activation == 'softplus':
+                    block.append(nn.Softplus())
+                elif activation == 'selu':
+                    block.append(nn.SELU())
+                elif activation == 'elu':
+                    block.append(nn.ELU())
+                elif activation == 'sigmoid':
+                    block.append(nn.Sigmoid())
+                elif activation == 'hardsigmoid':
+                    block.append(nn.Hardsigmoid())
+                elif activation == 'hardtanh':
+                    block.append(nn.Hardtanh())
+                elif activation == 'hardswish':
+                    block.append(nn.Hardswish())
+                elif activation == 'relu6':
+                    block.append(nn.ReLU6())
+                elif activation == 'prelu':
+                    block.append(nn.PReLU())
+                elif activation == 'rrelu':
+                    block.append(nn.RReLU())
+                elif activation == 'celu':
+                    block.append(nn.CELU())
+                elif activation == 'logsigmoid':
+                    block.append(nn.LogSigmoid())
+                elif activation != 'none':
+                    # Default to ReLU if unknown activation
+                    block.append(nn.ReLU())
 
                 # Add dropout
                 if dropout > 0:
