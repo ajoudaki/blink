@@ -12,21 +12,37 @@ pip install torch torchvision pandas scikit-learn hydra-core matplotlib tqdm cli
 
 ### Training Models
 
-The repository uses a unified training script (`train.py`) with Hydra configuration management. All model architectures and hyperparameters are controlled via YAML config files.
+The repository uses a **unified training script** (`train.py`) with a shared base encoder for both rating and comparison tasks. The same model architecture is used for both tasks, with only the readout layer changing:
+- **Rating**: 4-way classification per attribute (outputs 4 logits)
+- **Comparison**: Pairwise preference (outputs 1 score per image, compared via softmax)
 
 ```bash
-# Train best performing model (72.2% accuracy on comparisons)
-python train.py --config-name=config_best
+# Comparison task (default)
+python train.py                                     # Basic model (64% accuracy)
+python train.py --config-name=unified_comparison    # Same as default
+python train.py --config-name=unified_best          # Best model (72% accuracy, 100 epochs)
 
-# Train individual rating prediction model
-python train.py --config-name=config_rating
+# Rating task (4-way classification)
+python train.py --config-name=unified_rating        # Basic model (52% accuracy)
+python train.py --config-name=unified_rating_best   # Best model (54% accuracy)
 
-# Train pairwise comparison models
-python train.py --config-name=config_concat    # Concatenated features (62.4% acc)
-python train.py --config-name=config_siamese   # Siamese architecture (63.3% acc)
-python train.py --config-name=config_multihead # Multi-head Siamese (64.9% acc)
-python train.py                                # Unified Siamese (66.8% acc, default)
+# Custom hyperparameters
+python train.py task_type=rating training.epochs=20 model.use_user_encoding=true
 ```
+
+### Unified Architecture
+
+Both tasks use the same base encoder:
+1. **Input**: CLIP embedding (512D) + optional user one-hot encoding
+2. **Backbone**: Configurable MLP with dropout/batch norm
+3. **Output heads**:
+   - Rating: 4 logits per target → softmax → CE loss
+   - Comparison: 1 score per target → pairwise softmax → CE loss
+
+This design ensures:
+- **Code reuse**: Single model implementation for both tasks
+- **Fair comparison**: Same architecture capacity for both tasks
+- **Easy experimentation**: Switch tasks by changing `task_type` in config
 
 ### Directory Structure
 
@@ -73,14 +89,15 @@ Example: `runs/comparison_siamese_20250915_211516/`
 
 ### Performance Summary
 
-| Model | Task | Accuracy/MAE | Details |
-|-------|------|-------------|---------|
-| MLP | Individual Ratings | 0.557 MAE | Predicting 1-4 scale ratings |
-| Concatenated | Pairwise Comparison | 62.4% | Baseline approach |
-| Siamese | Pairwise Comparison | 63.3% | Shared encoder |
-| Multi-head | Pairwise Comparison | 64.9% | 3 output heads |
-| Unified | Pairwise Comparison | 66.8% | With user encoding (50 epochs) |
-| **Unified Best** | **Pairwise Comparison** | **72.2%** | **Optimized hyperparameters (100 epochs)** |
+| Task | Model Config | Accuracy | CE Loss | MAE | Details |
+|------|-------------|----------|---------|-----|---------|
+| **Comparison** | Basic | 64.1% | 0.64 | - | 50 epochs |
+| **Comparison** | With user encoding | 66.8% | 0.58 | - | 50 epochs |
+| **Comparison** | **Best architecture** | **72.2%** | **0.56** | - | **100 epochs, AdamW** |
+| **Rating** | Basic | 52.2% | 1.43 | 0.51 | 4-way classification |
+| **Rating** | Best architecture | 53.6% | 1.25 | 0.50 | Better regularization |
+
+Note: Rating accuracy is for exact class prediction (1-4 scale). MAE shows rating prediction error.
 
 ## Dataset Structure
 

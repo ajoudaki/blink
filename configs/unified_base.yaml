@@ -1,9 +1,19 @@
-# Configuration for rating prediction
-defaults:
-  - model: rating_mlp
+# Base configuration for unified model
+# Can be used for both rating and comparison tasks
 
-# Task configuration
-task_type: rating
+# Task type: 'rating' or 'comparison'
+task_type: comparison  # Change this to switch between tasks
+
+# Model configuration (shared for both tasks)
+model:
+  hidden_dims:
+    - 128
+    - 64
+  activation: relu
+  dropout: 0.2
+  batch_norm: false
+  layer_norm: false
+  use_user_encoding: false  # Set to true for user-specific modeling
 
 # Data configuration
 data:
@@ -19,7 +29,7 @@ training:
   epochs: 50
   learning_rate: 0.001
   validation_split: 0.2
-  augment_swapped_pairs: false  # Not applicable for rating
+  augment_swapped_pairs: true  # Only used for comparison task
   optimizer: adam
   weight_decay: 0
 

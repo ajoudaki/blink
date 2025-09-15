@@ -1,0 +1,15 @@
+# Configuration for rating prediction with unified model
+defaults:
+  - unified_base
+
+# Override for rating task
+task_type: rating
+
+# Rating-specific settings
+training:
+  epochs: 50
+  learning_rate: 0.001
+  validation_split: 0.2
+  augment_swapped_pairs: false  # Not applicable for rating
+  optimizer: adam
+  weight_decay: 0

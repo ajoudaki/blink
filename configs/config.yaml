@@ -1,9 +1,17 @@
-# Base configuration file
-defaults:
-  - model: comparison_siamese_unified  # Default model configuration
-
+# Base configuration file (for unified model)
 # Task configuration
 task_type: comparison  # 'rating' or 'comparison'
+
+# Model configuration (shared for both tasks)
+model:
+  hidden_dims:
+    - 128
+    - 64
+  activation: relu
+  dropout: 0.2
+  batch_norm: false
+  layer_norm: false
+  use_user_encoding: false
 
 # Data configuration
 data:
@@ -19,8 +27,8 @@ training:
   epochs: 50
   learning_rate: 0.001
   validation_split: 0.2
-  augment_swapped_pairs: true
-  optimizer: adam  # adam, adamw, sgd
+  augment_swapped_pairs: true  # Only used for comparison
+  optimizer: adam
   weight_decay: 0
 
 # GPU configuration

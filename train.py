@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Unified training script for all model architectures.
-Supports individual ratings and pairwise comparisons with various architectures.
+Unified training script with shared base model for ratings and comparisons.
+The base model outputs scores for each target, which are then processed
+differently for rating (4-way classification) vs comparison (pairwise preference).
 """
 
 import os
@@ -12,14 +13,12 @@ import torch.nn.functional as F
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, log_loss, mean_absolute_error, mean_squared_error
 from sklearn.preprocessing import LabelEncoder
 from tqdm import tqdm
 import hydra
 from omegaconf import DictConfig
 import clip
 from PIL import Image
-import matplotlib.pyplot as plt
 from datetime import datetime
 from pathlib import Path
 
@@ -72,159 +71,34 @@ def load_or_extract_embeddings(image_paths, cache_file=None,
 
 
 # ============================================================================
-# MODEL ARCHITECTURES
+# UNIFIED MODEL ARCHITECTURE
 # ============================================================================
 
-class MLPEncoder(nn.Module):
-    """Flexible MLP encoder for various tasks."""
+class BaseEncoder(nn.Module):
+    """
+    Base encoder that takes image embedding (+ optional user encoding)
+    and outputs raw scores for each target attribute.
 
-    def __init__(self, input_dim, output_dim, hidden_dims, activation='relu',
-                 dropout=0.0, use_batch_norm=False, use_layer_norm=False):
-        super().__init__()
-
-        layers = []
-        prev_dim = input_dim
-
-        for hidden_dim in hidden_dims:
-            layers.append(nn.Linear(prev_dim, hidden_dim))
-
-            if use_batch_norm:
-                layers.append(nn.BatchNorm1d(hidden_dim))
-            elif use_layer_norm:
-                layers.append(nn.LayerNorm(hidden_dim))
-
-            # Activation
-            if activation == 'relu':
-                layers.append(nn.ReLU())
-            elif activation == 'gelu':
-                layers.append(nn.GELU())
-            elif activation == 'tanh':
-                layers.append(nn.Tanh())
-            elif activation == 'leaky_relu':
-                layers.append(nn.LeakyReLU(0.1))
-            elif activation == 'elu':
-                layers.append(nn.ELU())
-
-            if dropout > 0:
-                layers.append(nn.Dropout(dropout))
-
-            prev_dim = hidden_dim
-
-        # Output layer
-        layers.append(nn.Linear(prev_dim, output_dim))
-
-        self.network = nn.Sequential(*layers)
-
-    def forward(self, x):
-        return self.network(x)
-
-
-class RatingModel(nn.Module):
-    """Model for individual rating prediction."""
-
-    def __init__(self, cfg):
-        super().__init__()
-
-        if cfg.model.architecture == 'linear':
-            self.model = nn.Linear(512, 1)
-        else:  # MLP
-            self.model = MLPEncoder(
-                input_dim=512,
-                output_dim=1,
-                hidden_dims=cfg.model.hidden_dims,
-                activation=cfg.model.activation,
-                dropout=cfg.model.dropout,
-                use_batch_norm=cfg.model.get('batch_norm', False),
-                use_layer_norm=cfg.model.get('layer_norm', False)
-            )
-
-    def forward(self, x):
-        return self.model(x).squeeze(-1)
-
-
-class ComparisonModel(nn.Module):
-    """Model for pairwise comparison (concatenated features)."""
-
-    def __init__(self, cfg):
-        super().__init__()
-
-        self.model = MLPEncoder(
-            input_dim=1024,  # Concatenated embeddings
-            output_dim=1,
-            hidden_dims=cfg.model.hidden_dims,
-            activation=cfg.model.activation,
-            dropout=cfg.model.dropout,
-            use_batch_norm=cfg.model.get('batch_norm', False),
-            use_layer_norm=cfg.model.get('layer_norm', False)
-        )
-
-    def forward(self, img1, img2):
-        x = torch.cat([img1, img2], dim=1)
-        return torch.sigmoid(self.model(x).squeeze(-1))
-
-
-class SiameseEncoder(nn.Module):
-    """Shared encoder for Siamese architecture."""
+    For comparison: outputs 1 score per target (will be compared via softmax)
+    For rating: outputs 4 scores per target (4-way classification)
+    """
 
     def __init__(self, cfg, n_users=None):
         super().__init__()
 
-        input_dim = 512
+        # Determine input dimension
+        input_dim = 512  # CLIP embedding size
         if cfg.model.get('use_user_encoding', False) and n_users:
             input_dim += n_users
 
-        self.encoder = MLPEncoder(
-            input_dim=input_dim,
-            output_dim=1,
-            hidden_dims=cfg.model.hidden_dims,
-            activation=cfg.model.activation,
-            dropout=cfg.model.dropout,
-            use_batch_norm=cfg.model.get('batch_norm', False),
-            use_layer_norm=cfg.model.get('layer_norm', False)
-        )
-
-    def forward(self, x):
-        return self.encoder(x).squeeze(-1)
-
-
-class SiameseModel(nn.Module):
-    """Siamese model for pairwise comparison."""
-
-    def __init__(self, cfg, n_users=None):
-        super().__init__()
-        self.encoder = SiameseEncoder(cfg, n_users)
-        self.use_user_encoding = cfg.model.get('use_user_encoding', False)
-
-    def forward(self, img1, img2, user_encoding=None):
-        if self.use_user_encoding and user_encoding is not None:
-            img1 = torch.cat([img1, user_encoding], dim=1)
-            img2 = torch.cat([img2, user_encoding], dim=1)
-
-        score1 = self.encoder(img1)
-        score2 = self.encoder(img2)
-
-        scores = torch.stack([score1, score2], dim=1)
-        probs = F.softmax(scores, dim=1)
-        return probs[:, 1]
-
-
-class MultiHeadSiameseEncoder(nn.Module):
-    """Encoder with multiple output heads."""
-
-    def __init__(self, cfg, n_users=None):
-        super().__init__()
-
-        input_dim = 512
-        if cfg.model.get('use_user_encoding', False) and n_users:
-            input_dim += n_users
-
-        # Shared backbone
+        # Build shared backbone
         layers = []
         prev_dim = input_dim
 
         for hidden_dim in cfg.model.hidden_dims:
             layers.append(nn.Linear(prev_dim, hidden_dim))
 
+            # Normalization
             if cfg.model.get('batch_norm', False):
                 layers.append(nn.BatchNorm1d(hidden_dim))
             elif cfg.model.get('layer_norm', False):
@@ -240,7 +114,10 @@ class MultiHeadSiameseEncoder(nn.Module):
                 layers.append(nn.Tanh())
             elif activation == 'leaky_relu':
                 layers.append(nn.LeakyReLU(0.1))
+            elif activation == 'elu':
+                layers.append(nn.ELU())
 
+            # Dropout
             if cfg.model.dropout > 0:
                 layers.append(nn.Dropout(cfg.model.dropout))
 
@@ -248,400 +125,286 @@ class MultiHeadSiameseEncoder(nn.Module):
 
         self.backbone = nn.Sequential(*layers)
 
-        # Output heads
-        self.heads = nn.ModuleDict({
-            'attractive': nn.Linear(prev_dim, 1),
-            'smart': nn.Linear(prev_dim, 1),
-            'trustworthy': nn.Linear(prev_dim, 1)
-        })
+        # Task-specific output heads
+        self.task_type = cfg.task_type
+        self.targets = cfg.data.targets
 
-    def forward(self, x, target='attractive'):
+        if cfg.task_type == 'rating':
+            # For rating: 4 outputs per target (4-way classification)
+            self.heads = nn.ModuleDict({
+                target: nn.Linear(prev_dim, 4)  # 4 rating levels
+                for target in self.targets
+            })
+        else:  # comparison
+            # For comparison: 1 output per target (will be compared)
+            self.heads = nn.ModuleDict({
+                target: nn.Linear(prev_dim, 1)
+                for target in self.targets
+            })
+
+        self.use_user_encoding = cfg.model.get('use_user_encoding', False)
+        self.n_users = n_users
+
+    def forward(self, x, user_encoding=None, target='attractive'):
+        """
+        Forward pass through encoder.
+
+        Args:
+            x: Image embedding
+            user_encoding: Optional user one-hot encoding
+            target: Which target attribute to predict
+
+        Returns:
+            For rating: 4 logits (one per rating level)
+            For comparison: 1 score (to be compared)
+        """
+        if self.use_user_encoding and user_encoding is not None:
+            x = torch.cat([x, user_encoding], dim=1)
+
         features = self.backbone(x)
-        return self.heads[target](features).squeeze(-1)
+        output = self.heads[target](features)
+
+        if self.task_type == 'comparison':
+            output = output.squeeze(-1)  # Return shape (batch_size,)
+
+        return output
 
 
-class MultiHeadSiameseModel(nn.Module):
-    """Multi-head Siamese model."""
+class UnifiedModel(nn.Module):
+    """
+    Unified model that handles both rating and comparison tasks.
+    Uses the same base encoder but different readout strategies.
+    """
 
     def __init__(self, cfg, n_users=None):
         super().__init__()
-        self.encoder = MultiHeadSiameseEncoder(cfg, n_users)
-        self.use_user_encoding = cfg.model.get('use_user_encoding', False)
+        self.encoder = BaseEncoder(cfg, n_users)
+        self.task_type = cfg.task_type
 
-    def forward(self, img1, img2, target='attractive', user_encoding=None):
-        if self.use_user_encoding and user_encoding is not None:
-            img1 = torch.cat([img1, user_encoding], dim=1)
-            img2 = torch.cat([img2, user_encoding], dim=1)
+    def forward_rating(self, x, user_encoding=None, target='attractive'):
+        """
+        Forward pass for rating prediction.
+        Returns probabilities for each rating level (1-4).
+        """
+        logits = self.encoder(x, user_encoding, target)  # Shape: (batch, 4)
+        probs = F.softmax(logits, dim=-1)
+        return probs
 
-        score1 = self.encoder(img1, target)
-        score2 = self.encoder(img2, target)
+    def forward_comparison(self, x1, x2, user_encoding=None, target='attractive'):
+        """
+        Forward pass for pairwise comparison.
+        Returns probability of choosing second image.
+        """
+        score1 = self.encoder(x1, user_encoding, target)  # Shape: (batch,)
+        score2 = self.encoder(x2, user_encoding, target)  # Shape: (batch,)
 
-        scores = torch.stack([score1, score2], dim=1)
+        # Stack and apply softmax for pairwise comparison
+        scores = torch.stack([score1, score2], dim=1)  # Shape: (batch, 2)
         probs = F.softmax(scores, dim=1)
-        return probs[:, 1]
+
+        return probs[:, 1]  # Probability of choosing second image
+
+    def forward(self, *args, **kwargs):
+        """Route to appropriate forward method based on task type."""
+        if self.task_type == 'rating':
+            return self.forward_rating(*args, **kwargs)
+        else:
+            return self.forward_comparison(*args, **kwargs)
 
 
 # ============================================================================
-# TRAINING FUNCTIONS
+# UNIFIED TRAINING FUNCTION
 # ============================================================================
 
-def train_rating_model(df, embeddings, cfg, device):
-    """Train model for individual rating prediction."""
-
-    print("\nTraining rating prediction model...")
-
-    # Prepare data for each target
-    results = {}
-
-    for target in cfg.data.targets:
-        print(f"\nTraining for {target}...")
-
-        # Prepare features and labels
-        X_list = []
-        y_list = []
-
-        for _, row in df.iterrows():
-            if pd.notna(row[target]):
-                img_embedding = embeddings.get(row['image_path'], np.zeros(512))
-                X_list.append(img_embedding)
-                y_list.append(row[target])
-
-        X = np.array(X_list)
-        y = np.array(y_list)
-
-        # Split data
-        X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=cfg.training.validation_split,
-            random_state=42, stratify=pd.cut(y, bins=4, labels=False)
-        )
-
-        # Convert to tensors
-        X_train = torch.FloatTensor(X_train).to(device)
-        X_val = torch.FloatTensor(X_val).to(device)
-        y_train = torch.FloatTensor(y_train).to(device)
-        y_val_np = y_val
-
-        # Initialize model
-        model = RatingModel(cfg).to(device)
-        optimizer = get_optimizer(model, cfg)
-        criterion = nn.MSELoss()
-
-        # Training loop
-        for epoch in range(cfg.training.epochs):
-            model.train()
-            optimizer.zero_grad()
-
-            predictions = model(X_train)
-            loss = criterion(predictions, y_train)
-
-            loss.backward()
-            optimizer.step()
-
-        # Evaluation
-        model.eval()
-        with torch.no_grad():
-            val_predictions = model(X_val).cpu().numpy()
-            val_predictions = np.clip(val_predictions, 1, 4)
-
-            mae = mean_absolute_error(y_val_np, val_predictions)
-            rmse = np.sqrt(mean_squared_error(y_val_np, val_predictions))
-
-        results[target] = {
-            'mae': mae,
-            'rmse': rmse,
-            'n_train': len(y_train),
-            'n_val': len(y_val_np)
-        }
-
-        print(f"  MAE: {mae:.3f}, RMSE: {rmse:.3f}")
-
-    return results
-
-
-def train_comparison_model(df, embeddings, cfg, device):
-    """Train model for pairwise comparison prediction."""
-
-    print("\nTraining comparison model...")
-
-    # Determine model type
-    is_siamese = 'siamese' in cfg.model.architecture
-    is_multihead = cfg.model.get('multi_head', False)
-    use_user_encoding = cfg.model.get('use_user_encoding', False)
-
-    # Prepare user encoder if needed
-    user_encoder = None
-    n_users = None
-    if use_user_encoding:
-        user_encoder = LabelEncoder()
-        user_encoder.fit(df['user_id'].unique())
-        n_users = len(user_encoder.classes_)
-        print(f"Using user encoding with {n_users} users")
-
-    # Initialize model
-    if is_multihead:
-        model = MultiHeadSiameseModel(cfg, n_users).to(device)
-    elif is_siamese:
-        model = SiameseModel(cfg, n_users).to(device)
-    else:
-        model = ComparisonModel(cfg).to(device)
-
-    optimizer = get_optimizer(model, cfg)
-    criterion = nn.BCELoss()
-
-    # Prepare data for all targets
+def prepare_data(df, embeddings, cfg, user_encoder=None):
+    """
+    Prepare data for training, handling both rating and comparison tasks.
+    """
     all_data = {}
 
     for target in cfg.data.targets:
-        X1_list, X2_list, y_list, user_list = [], [], [], []
+        if cfg.task_type == 'rating':
+            # Prepare rating data
+            X_list = []
+            y_list = []
+            user_list = []
 
-        for _, row in df.iterrows():
-            img1_emb = embeddings.get(row['im1_path'], np.zeros(512))
-            img2_emb = embeddings.get(row['im2_path'], np.zeros(512))
+            for _, row in df.iterrows():
+                if pd.notna(row[target]):
+                    img_embedding = embeddings.get(row['image_path'], np.zeros(512))
+                    X_list.append(img_embedding)
+                    # Convert rating to 0-indexed (0-3 instead of 1-4)
+                    y_list.append(int(row[target]) - 1)
 
-            X1_list.append(img1_emb)
-            X2_list.append(img2_emb)
-            y_list.append(row[f'{target}_binary'])
+                    if user_encoder is not None:
+                        user_idx = user_encoder.transform([row['user_id']])[0]
+                        user_onehot = np.zeros(len(user_encoder.classes_))
+                        user_onehot[user_idx] = 1.0
+                        user_list.append(user_onehot)
 
-            if use_user_encoding:
-                user_idx = user_encoder.transform([row['user_id']])[0]
-                user_onehot = np.zeros(n_users)
-                user_onehot[user_idx] = 1.0
-                user_list.append(user_onehot)
+            data = {
+                'X': np.array(X_list),
+                'y': np.array(y_list)
+            }
+            if user_encoder is not None:
+                data['user'] = np.array(user_list)
 
-        data = {
-            'X1': np.array(X1_list),
-            'X2': np.array(X2_list),
-            'y': np.array(y_list)
-        }
-        if use_user_encoding:
-            data['user'] = np.array(user_list)
+        else:  # comparison
+            # Prepare comparison data
+            X1_list = []
+            X2_list = []
+            y_list = []
+            user_list = []
+
+            for _, row in df.iterrows():
+                img1_emb = embeddings.get(row['im1_path'], np.zeros(512))
+                img2_emb = embeddings.get(row['im2_path'], np.zeros(512))
+
+                X1_list.append(img1_emb)
+                X2_list.append(img2_emb)
+                y_list.append(row[f'{target}_binary'])
+
+                if user_encoder is not None:
+                    user_idx = user_encoder.transform([row['user_id']])[0]
+                    user_onehot = np.zeros(len(user_encoder.classes_))
+                    user_onehot[user_idx] = 1.0
+                    user_list.append(user_onehot)
+
+            data = {
+                'X1': np.array(X1_list),
+                'X2': np.array(X2_list),
+                'y': np.array(y_list)
+            }
+            if user_encoder is not None:
+                data['user'] = np.array(user_list)
 
         all_data[target] = data
 
-    # Training and evaluation
-    results = {}
+    return all_data
 
-    if is_multihead:
-        # Train single model on all targets
-        results = train_multihead_model(model, all_data, cfg, device, optimizer, criterion)
+
+def train_model(model, train_data, val_data, cfg, device):
+    """
+    Unified training loop for both rating and comparison tasks.
+    """
+    optimizer = get_optimizer(model, cfg)
+
+    # Use CrossEntropyLoss for both tasks
+    if cfg.task_type == 'rating':
+        criterion = nn.CrossEntropyLoss()
     else:
-        # Train separate models per target
-        for target in cfg.data.targets:
-            print(f"\nTraining for {target}...")
-
-            data = all_data[target]
-
-            # Split data
-            indices = np.arange(len(data['y']))
-            train_idx, val_idx = train_test_split(
-                indices, test_size=cfg.training.validation_split,
-                random_state=42, stratify=data['y']
-            )
-
-            # Prepare training data
-            X1_train = data['X1'][train_idx]
-            X2_train = data['X2'][train_idx]
-            y_train = data['y'][train_idx]
-
-            # Prepare validation data
-            X1_val = data['X1'][val_idx]
-            X2_val = data['X2'][val_idx]
-            y_val = data['y'][val_idx]
-
-            # User encoding if needed
-            user_train = None
-            user_val = None
-            if use_user_encoding:
-                user_train = data['user'][train_idx]
-                user_val = data['user'][val_idx]
-
-            # Data augmentation
-            if cfg.training.augment_swapped_pairs:
-                X1_train, X2_train, y_train, user_train = augment_comparison_data(
-                    X1_train, X2_train, y_train, user_train
-                )
-
-            # Convert to tensors
-            X1_train = torch.FloatTensor(X1_train).to(device)
-            X2_train = torch.FloatTensor(X2_train).to(device)
-            y_train = torch.FloatTensor(y_train).to(device)
-
-            X1_val = torch.FloatTensor(X1_val).to(device)
-            X2_val = torch.FloatTensor(X2_val).to(device)
-
-            if use_user_encoding:
-                user_train = torch.FloatTensor(user_train).to(device)
-                user_val = torch.FloatTensor(user_val).to(device)
-
-            # Training loop
-            for epoch in range(cfg.training.epochs):
-                model.train()
-                optimizer.zero_grad()
-
-                if is_siamese:
-                    predictions = model(X1_train, X2_train, user_train)
-                else:
-                    predictions = model(X1_train, X2_train)
-
-                loss = criterion(predictions, y_train)
-                loss.backward()
-                optimizer.step()
-
-            # Evaluation
-            model.eval()
-            with torch.no_grad():
-                if is_siamese:
-                    val_probs = model(X1_val, X2_val, user_val)
-                else:
-                    val_probs = model(X1_val, X2_val)
-
-                val_probs_np = val_probs.cpu().numpy()
-                val_pred = (val_probs_np > 0.5).astype(int)
-
-                accuracy = accuracy_score(y_val, val_pred)
-                ce_loss = log_loss(y_val, val_probs_np, labels=[0, 1])
-
-            results[target] = {
-                'accuracy': accuracy,
-                'ce_loss': ce_loss,
-                'n_train': len(y_train),
-                'n_val': len(y_val)
-            }
-
-            print(f"  Accuracy: {accuracy:.3f}, CE Loss: {ce_loss:.3f}")
-
-    return results
-
-
-def train_multihead_model(model, all_data, cfg, device, optimizer, criterion):
-    """Train multi-head model on all targets."""
-
-    print("\nTraining multi-head model...")
-
-    # Prepare datasets
-    train_data = {}
-    val_data = {}
-
-    for target, data in all_data.items():
-        # Split data
-        indices = np.arange(len(data['y']))
-        train_idx, val_idx = train_test_split(
-            indices, test_size=cfg.training.validation_split,
-            random_state=42, stratify=data['y']
-        )
-
-        # Training data
-        X1_train = data['X1'][train_idx]
-        X2_train = data['X2'][train_idx]
-        y_train = data['y'][train_idx]
-
-        # Validation data
-        X1_val = data['X1'][val_idx]
-        X2_val = data['X2'][val_idx]
-        y_val = data['y'][val_idx]
-
-        # User encoding if present
-        user_train = None
-        user_val = None
-        if 'user' in data:
-            user_train = data['user'][train_idx]
-            user_val = data['user'][val_idx]
-
-        # Augmentation
-        if cfg.training.augment_swapped_pairs:
-            X1_train, X2_train, y_train, user_train = augment_comparison_data(
-                X1_train, X2_train, y_train, user_train
-            )
-
-        # Convert to tensors
-        train_data[target] = {
-            'X1': torch.FloatTensor(X1_train).to(device),
-            'X2': torch.FloatTensor(X2_train).to(device),
-            'y': torch.FloatTensor(y_train).to(device),
-            'n_train': len(y_train)
-        }
-
-        val_data[target] = {
-            'X1': torch.FloatTensor(X1_val).to(device),
-            'X2': torch.FloatTensor(X2_val).to(device),
-            'y_np': y_val,
-            'n_val': len(y_val)
-        }
-
-        if user_train is not None:
-            train_data[target]['user'] = torch.FloatTensor(user_train).to(device)
-            val_data[target]['user'] = torch.FloatTensor(user_val).to(device)
+        criterion = nn.BCELoss()
 
     # Training loop
     for epoch in tqdm(range(cfg.training.epochs), desc="Training"):
-        for target in cfg.data.targets:
-            train = train_data[target]
+        model.train()
 
-            model.train()
+        for target in cfg.data.targets:
             optimizer.zero_grad()
 
-            user_encoding = train.get('user', None)
-            predictions = model(train['X1'], train['X2'], target, user_encoding)
-            loss = criterion(predictions, train['y'])
+            if cfg.task_type == 'rating':
+                # Rating task
+                predictions = model(
+                    train_data[target]['X'],
+                    train_data[target].get('user', None),
+                    target=target
+                )
+                # CrossEntropyLoss expects class indices
+                loss = criterion(predictions, train_data[target]['y'])
+
+            else:
+                # Comparison task
+                predictions = model(
+                    train_data[target]['X1'],
+                    train_data[target]['X2'],
+                    train_data[target].get('user', None),
+                    target=target
+                )
+                loss = criterion(predictions, train_data[target]['y_float'])
 
             loss.backward()
             optimizer.step()
 
     # Evaluation
-    results = {}
     model.eval()
+    results = {}
 
-    for target in cfg.data.targets:
-        val = val_data[target]
+    with torch.no_grad():
+        for target in cfg.data.targets:
+            if cfg.task_type == 'rating':
+                # Rating evaluation
+                predictions = model(
+                    val_data[target]['X'],
+                    val_data[target].get('user', None),
+                    target=target
+                )
 
-        with torch.no_grad():
-            user_encoding = val.get('user', None)
-            val_probs = model(val['X1'], val['X2'], target, user_encoding)
-            val_probs_np = val_probs.cpu().numpy()
-            val_pred = (val_probs_np > 0.5).astype(int)
+                # Get predicted class
+                pred_class = predictions.argmax(dim=-1).cpu().numpy()
+                true_class = val_data[target]['y_np']
 
-            accuracy = accuracy_score(val['y_np'], val_pred)
-            ce_loss = log_loss(val['y_np'], val_probs_np, labels=[0, 1])
+                # Classification metrics
+                accuracy = np.mean(pred_class == true_class)
 
-        results[target] = {
-            'accuracy': accuracy,
-            'ce_loss': ce_loss,
-            'n_train': train_data[target]['n_train'],
-            'n_val': val['n_val']
-        }
+                # Cross-entropy loss
+                probs = predictions.cpu().numpy()
+                # Create one-hot encoding for true labels
+                n_samples = len(true_class)
+                true_one_hot = np.zeros((n_samples, 4))
+                true_one_hot[np.arange(n_samples), true_class] = 1
+                # Calculate CE loss
+                probs_clipped = np.clip(probs, 1e-7, 1 - 1e-7)
+                ce_loss = -np.mean(np.sum(true_one_hot * np.log(probs_clipped), axis=1))
 
-        print(f"{target}: Accuracy={accuracy:.3f}, CE Loss={ce_loss:.3f}")
+                # Regression metrics (for backward compatibility)
+                pred_rating = pred_class + 1
+                true_rating = true_class + 1
+                mae = np.mean(np.abs(pred_rating - true_rating))
+                rmse = np.sqrt(np.mean((pred_rating - true_rating) ** 2))
+
+                results[target] = {
+                    'accuracy': accuracy,
+                    'ce_loss': ce_loss,
+                    'mae': mae,
+                    'rmse': rmse,
+                    'n_train': len(train_data[target]['y']),
+                    'n_val': len(val_data[target]['y_np'])
+                }
+
+            else:
+                # Comparison evaluation
+                predictions = model(
+                    val_data[target]['X1'],
+                    val_data[target]['X2'],
+                    val_data[target].get('user', None),
+                    target=target
+                )
+                pred_binary = (predictions.cpu().numpy() > 0.5).astype(int)
+                true_binary = val_data[target]['y_np']
+
+                accuracy = np.mean(pred_binary == true_binary)
+
+                # Calculate cross-entropy loss
+                probs = predictions.cpu().numpy()
+                # Clip probabilities to avoid log(0)
+                probs = np.clip(probs, 1e-7, 1 - 1e-7)
+                ce_loss = -np.mean(
+                    true_binary * np.log(probs) +
+                    (1 - true_binary) * np.log(1 - probs)
+                )
+
+                results[target] = {
+                    'accuracy': accuracy,
+                    'ce_loss': ce_loss,
+                    'n_train': len(train_data[target]['y']),
+                    'n_val': len(val_data[target]['y_np'])
+                }
 
     return results
 
 
-def augment_comparison_data(X1, X2, y, user=None):
-    """Augment comparison data with swapped pairs."""
-
-    X1_aug = np.vstack([X1, X2])
-    X2_aug = np.vstack([X2, X1])
-    y_aug = np.hstack([y, 1 - y])
-
-    if user is not None:
-        user_aug = np.vstack([user, user])
-    else:
-        user_aug = None
-
-    # Shuffle
-    indices = np.random.permutation(len(y_aug))
-    X1_aug = X1_aug[indices]
-    X2_aug = X2_aug[indices]
-    y_aug = y_aug[indices]
-
-    if user_aug is not None:
-        user_aug = user_aug[indices]
-
-    return X1_aug, X2_aug, y_aug, user_aug
-
-
 def get_optimizer(model, cfg):
     """Get optimizer based on configuration."""
-
     opt_type = cfg.training.optimizer
     lr = cfg.training.learning_rate
     weight_decay = cfg.training.get('weight_decay', 0)
@@ -657,7 +420,7 @@ def get_optimizer(model, cfg):
 
 
 # ============================================================================
-# MAIN TRAINING FUNCTION
+# MAIN FUNCTION
 # ============================================================================
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -669,11 +432,11 @@ def main(cfg: DictConfig):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     print(f"Task type: {cfg.task_type}")
-    print(f"Model architecture: {cfg.model.architecture}")
+    print(f"Model architecture: Unified BaseEncoder")
 
     # Create run-specific output directory
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_name = f"{cfg.task_type}_{cfg.model.architecture}_{run_id}"
+    run_name = f"{cfg.task_type}_unified_{run_id}"
     run_dir = Path(f"runs/{run_name}")
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -720,38 +483,133 @@ def main(cfg: DictConfig):
         force_recompute=cfg.data.get('force_recompute_embeddings', False)
     )
 
-    # Train model based on task type
-    if cfg.task_type == 'rating':
-        results = train_rating_model(df, embeddings, cfg, device)
-    else:
-        results = train_comparison_model(df, embeddings, cfg, device)
+    # Prepare user encoder if needed
+    user_encoder = None
+    n_users = None
+    if cfg.model.get('use_user_encoding', False):
+        user_encoder = LabelEncoder()
+        user_encoder.fit(df['user_id'].unique())
+        n_users = len(user_encoder.classes_)
+        print(f"Using user encoding with {n_users} users")
+
+    # Prepare data
+    all_data = prepare_data(df, embeddings, cfg, user_encoder)
+
+    # Split data and prepare for training
+    train_data = {}
+    val_data = {}
+
+    for target, data in all_data.items():
+        if cfg.task_type == 'rating':
+            # Split rating data
+            indices = np.arange(len(data['y']))
+            train_idx, val_idx = train_test_split(
+                indices,
+                test_size=cfg.training.validation_split,
+                random_state=42,
+                stratify=data['y']
+            )
+
+            train_data[target] = {
+                'X': torch.FloatTensor(data['X'][train_idx]).to(device),
+                'y': torch.LongTensor(data['y'][train_idx]).to(device)
+            }
+
+            val_data[target] = {
+                'X': torch.FloatTensor(data['X'][val_idx]).to(device),
+                'y_np': data['y'][val_idx]
+            }
+
+            if 'user' in data:
+                train_data[target]['user'] = torch.FloatTensor(data['user'][train_idx]).to(device)
+                val_data[target]['user'] = torch.FloatTensor(data['user'][val_idx]).to(device)
+
+        else:  # comparison
+            # Split comparison data
+            indices = np.arange(len(data['y']))
+            train_idx, val_idx = train_test_split(
+                indices,
+                test_size=cfg.training.validation_split,
+                random_state=42,
+                stratify=data['y']
+            )
+
+            # Training data
+            X1_train = data['X1'][train_idx]
+            X2_train = data['X2'][train_idx]
+            y_train = data['y'][train_idx]
+
+            # Augmentation for comparison
+            if cfg.training.get('augment_swapped_pairs', True):
+                X1_aug = np.vstack([X1_train, X2_train])
+                X2_aug = np.vstack([X2_train, X1_train])
+                y_aug = np.hstack([y_train, 1 - y_train])
+
+                # Shuffle
+                shuffle_idx = np.random.permutation(len(y_aug))
+                X1_train = X1_aug[shuffle_idx]
+                X2_train = X2_aug[shuffle_idx]
+                y_train = y_aug[shuffle_idx]
+
+            train_data[target] = {
+                'X1': torch.FloatTensor(X1_train).to(device),
+                'X2': torch.FloatTensor(X2_train).to(device),
+                'y': torch.LongTensor(y_train).to(device),
+                'y_float': torch.FloatTensor(y_train).to(device)
+            }
+
+            val_data[target] = {
+                'X1': torch.FloatTensor(data['X1'][val_idx]).to(device),
+                'X2': torch.FloatTensor(data['X2'][val_idx]).to(device),
+                'y_np': data['y'][val_idx]
+            }
+
+            if 'user' in data:
+                user_train = data['user'][train_idx]
+                if cfg.training.get('augment_swapped_pairs', True):
+                    user_aug = np.vstack([user_train, user_train])
+                    user_train = user_aug[shuffle_idx]
+
+                train_data[target]['user'] = torch.FloatTensor(user_train).to(device)
+                val_data[target]['user'] = torch.FloatTensor(data['user'][val_idx]).to(device)
+
+    # Initialize model
+    model = UnifiedModel(cfg, n_users).to(device)
+
+    # Train model
+    print("\nTraining unified model...")
+    results = train_model(model, train_data, val_data, cfg, device)
 
     # Report results
     print("\n" + "=" * 60)
     print("TRAINING RESULTS")
     print("=" * 60)
     print(f"Task: {cfg.task_type}")
-    print(f"Model: {cfg.model.architecture}")
+    print(f"Model: Unified BaseEncoder")
 
-    if cfg.model.get('multi_head', False):
-        print("Multi-head: Yes")
     if cfg.model.get('use_user_encoding', False):
-        print("User encoding: Yes")
+        print(f"User encoding: Yes ({n_users} users)")
 
     print()
 
-    # Calculate and display metrics
+    # Display and save results
     if cfg.task_type == 'rating':
+        avg_acc = np.mean([r['accuracy'] for r in results.values()])
+        avg_ce = np.mean([r['ce_loss'] for r in results.values()])
         avg_mae = np.mean([r['mae'] for r in results.values()])
         avg_rmse = np.mean([r['rmse'] for r in results.values()])
 
         for target, metrics in results.items():
             print(f"{target.upper()}:")
+            print(f"  Accuracy: {metrics['accuracy']:.3f}")
+            print(f"  CE Loss: {metrics['ce_loss']:.3f}")
             print(f"  MAE: {metrics['mae']:.3f}")
             print(f"  RMSE: {metrics['rmse']:.3f}")
             print(f"  Samples: {metrics['n_train']} train, {metrics['n_val']} val")
             print()
 
+        print(f"Average Accuracy: {avg_acc:.3f}")
+        print(f"Average CE Loss: {avg_ce:.3f}")
         print(f"Average MAE: {avg_mae:.3f}")
         print(f"Average RMSE: {avg_rmse:.3f}")
 
@@ -769,7 +627,7 @@ def main(cfg: DictConfig):
         print(f"Average Accuracy: {avg_acc:.3f}")
         print(f"Average CE Loss: {avg_loss:.3f}")
 
-    # Save results to run directory
+    # Save results
     results_df = pd.DataFrame(results).T
     results_file = run_dir / "results.csv"
     results_df.to_csv(results_file)
@@ -781,23 +639,21 @@ def main(cfg: DictConfig):
         f.write(str(cfg))
     print(f"✓ Configuration saved to {config_file}")
 
-    # Create summary file
+    # Create summary
     summary_file = run_dir / "summary.txt"
     with open(summary_file, 'w') as f:
         f.write(f"Run: {run_name}\n")
         f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         f.write(f"Task: {cfg.task_type}\n")
-        f.write(f"Model: {cfg.model.architecture}\n")
+        f.write(f"Model: Unified BaseEncoder\n")
         f.write("-" * 50 + "\n")
 
         if cfg.task_type == 'rating':
-            avg_mae = np.mean([r['mae'] for r in results.values()])
-            avg_rmse = np.mean([r['rmse'] for r in results.values()])
+            f.write(f"Average Accuracy: {avg_acc:.3f}\n")
+            f.write(f"Average CE Loss: {avg_ce:.3f}\n")
             f.write(f"Average MAE: {avg_mae:.3f}\n")
             f.write(f"Average RMSE: {avg_rmse:.3f}\n")
         else:
-            avg_acc = np.mean([r['accuracy'] for r in results.values()])
-            avg_loss = np.mean([r['ce_loss'] for r in results.values()])
             f.write(f"Average Accuracy: {avg_acc:.3f}\n")
             f.write(f"Average CE Loss: {avg_loss:.3f}\n")
 
