@@ -1,0 +1,11 @@
+dash~=1.17.0
+plotly~=4.13.0
+pymysql~=0.10.1
+pandas~=1.1.4
+scikit-image~=0.17.2
+ipywidgets>=7.0.0
+openpyxl>=3.0.0
+tqdm
+tensorflow
+tf-models-official
+tf-models-nightly
