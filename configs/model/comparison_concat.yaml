@@ -1,0 +1,9 @@
+# Concatenated features model for pairwise comparison
+architecture: concat
+hidden_dims:
+  - 256
+  - 128
+activation: relu
+dropout: 0.2
+batch_norm: false
+layer_norm: false

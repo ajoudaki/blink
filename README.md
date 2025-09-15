@@ -3,6 +3,61 @@
 ## Overview
 This dataset contains human perception ratings for images from the FFHQ (Flickr-Faces-HQ) dataset. Human labelers evaluated facial images on three key attributes: **attractiveness**, **smartness**, and **trustworthiness**. The dataset includes two labeling paradigms: individual ratings and pairwise comparisons.
 
+## Quick Start
+
+### Installation
+```bash
+pip install torch torchvision pandas scikit-learn hydra-core matplotlib tqdm clip-by-openai
+```
+
+### Training Models
+
+The repository uses a unified training script (`train.py`) with Hydra configuration management. All model architectures and hyperparameters are controlled via YAML config files.
+
+```bash
+# Train best performing model (72.2% accuracy on comparisons)
+python train.py --config-name=config_best
+
+# Train individual rating prediction model
+python train.py --config-name=config_rating
+
+# Train pairwise comparison models
+python train.py --config-name=config_concat    # Concatenated features (62.4% acc)
+python train.py --config-name=config_siamese   # Siamese architecture (63.3% acc)
+python train.py --config-name=config_multihead # Multi-head Siamese (64.9% acc)
+python train.py                                # Unified Siamese (66.8% acc, default)
+```
+
+### Configuration Structure
+
+- **Base configs**: `configs/config*.yaml` - Complete configurations for different tasks
+- **Model configs**: `configs/model/*.yaml` - Architecture-specific parameters
+- **Results**: Saved to `results/` directory
+- **Hydra outputs**: Saved to `outputs/` directory with timestamps
+
+### Model Architectures
+
+1. **Rating Models** (Individual ratings, 1-4 scale):
+   - Linear: Simple linear projection
+   - MLP: Multi-layer perceptron with configurable depth
+
+2. **Comparison Models** (Pairwise preferences):
+   - Concatenated: Concat embeddings → MLP → sigmoid
+   - Siamese: Shared encoder with softmax normalization
+   - Multi-head: Single model with 3 output heads (one per attribute)
+   - Unified: Multi-head + user one-hot encoding (best performance)
+
+### Performance Summary
+
+| Model | Task | Accuracy/MAE | Details |
+|-------|------|-------------|---------|
+| MLP | Individual Ratings | 0.557 MAE | Predicting 1-4 scale ratings |
+| Concatenated | Pairwise Comparison | 62.4% | Baseline approach |
+| Siamese | Pairwise Comparison | 63.3% | Shared encoder |
+| Multi-head | Pairwise Comparison | 64.9% | 3 output heads |
+| Unified | Pairwise Comparison | 66.8% | With user encoding (50 epochs) |
+| **Unified Best** | **Pairwise Comparison** | **72.2%** | **Optimized hyperparameters (100 epochs)** |
+
 ## Dataset Structure
 
 ### Data Files

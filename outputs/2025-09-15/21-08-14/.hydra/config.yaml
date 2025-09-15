@@ -1,0 +1,24 @@
+model:
+  architecture: concat
+  hidden_dims:
+  - 256
+  - 128
+  activation: relu
+  dropout: 0.2
+  batch_norm: false
+  layer_norm: false
+task_type: comparison
+data:
+  targets:
+  - attractive
+  - smart
+  - trustworthy
+  embeddings_cache_file: clip_embeddings_cache.pkl
+training:
+  epochs: 50
+  learning_rate: 0.001
+  validation_split: 0.2
+  augment_swapped_pairs: true
+  optimizer: adam
+gpu:
+  device_id: 1

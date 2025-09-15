@@ -1,0 +1,29 @@
+model:
+  architecture: siamese
+  hidden_dims:
+  - 512
+  - 256
+  - 128
+  activation: gelu
+  dropout: 0.3
+  batch_norm: true
+  layer_norm: false
+  multi_head: true
+  use_user_encoding: true
+task_type: comparison
+data:
+  targets:
+  - attractive
+  - smart
+  - trustworthy
+  embeddings_cache_file: clip_embeddings_cache.pkl
+  force_recompute_embeddings: false
+training:
+  epochs: 100
+  learning_rate: 0.001
+  validation_split: 0.2
+  augment_swapped_pairs: true
+  optimizer: adamw
+  weight_decay: 0.01
+gpu:
+  device_id: 1

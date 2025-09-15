@@ -1,0 +1,12 @@
+# Best performing unified Siamese model configuration
+architecture: siamese
+hidden_dims:
+  - 512
+  - 256
+  - 128
+activation: gelu
+dropout: 0.3
+batch_norm: true
+layer_norm: false
+multi_head: true
+use_user_encoding: true

@@ -1,0 +1,11 @@
+# Unified Siamese model with user one-hot encoding
+architecture: siamese
+hidden_dims:
+  - 128
+  - 64
+activation: relu
+dropout: 0.2
+batch_norm: false
+layer_norm: false
+multi_head: true
+use_user_encoding: true

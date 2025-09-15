@@ -1,0 +1,26 @@
+# Configuration for multi-head siamese model
+defaults:
+  - model: comparison_multihead
+
+task_type: comparison
+
+data:
+  targets:
+    - attractive
+    - smart
+    - trustworthy
+  embeddings_cache_file: clip_embeddings_cache.pkl
+
+training:
+  epochs: 50
+  learning_rate: 0.001
+  validation_split: 0.2
+  augment_swapped_pairs: true
+  optimizer: adam
+
+gpu:
+  device_id: 1
+
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}

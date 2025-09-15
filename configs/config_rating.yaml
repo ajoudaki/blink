@@ -1,0 +1,36 @@
+# Configuration for rating prediction
+defaults:
+  - model: rating_mlp
+
+# Task configuration
+task_type: rating
+
+# Data configuration
+data:
+  targets:
+    - attractive
+    - smart
+    - trustworthy
+  embeddings_cache_file: clip_embeddings_cache.pkl
+  force_recompute_embeddings: false
+
+# Training configuration
+training:
+  epochs: 50
+  learning_rate: 0.001
+  validation_split: 0.2
+  augment_swapped_pairs: false  # Not applicable for rating
+  optimizer: adam
+  weight_decay: 0
+
+# GPU configuration
+gpu:
+  device_id: 1
+
+# Hydra configuration
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
