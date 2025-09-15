@@ -1,0 +1,18 @@
+model:
+  hidden_dims:
+  - 256
+  - 128
+  - 64
+  activation: relu
+  dropout: 0.2
+  use_batch_norm: false
+training:
+  epochs: 50
+  learning_rate: 0.001
+  batch_size: 32
+  validation_split: 0.2
+data:
+  cache_embeddings: true
+  embeddings_cache_file: clip_embeddings_cache.pkl
+gpu:
+  device_id: 1
