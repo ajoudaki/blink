@@ -1,0 +1,44 @@
+# Configuration for GLU (Gated Linear Units) model
+# Based on best configuration with GLU layers instead of linear
+
+defaults:
+  - unified_base
+
+seed: 42
+task_type: comparison
+
+# Model architecture with GLU
+model:
+  # Same deep narrow architecture that worked best
+  hidden_dims:
+    - 384
+    - 256
+    - 128
+    - 64
+    - 32
+
+  # Activation is handled by GLU gates (sigmoid)
+  # No separate activation needed
+  activation: none
+
+  # Keep optimized regularization
+  dropout: 0.15
+  use_batchnorm: true
+  use_layernorm: false
+
+  # User embeddings
+  use_user_embedding: true
+  user_embedding_dim: 32
+
+  # GLU specific
+  use_glu: true
+
+# Training configuration
+training:
+  epochs: 50
+  batch_size: 128
+  learning_rate: 0.001
+  validation_split: 0.2
+  augment_swapped_pairs: true
+  optimizer: adamw
+  weight_decay: 0.001  # Optimized lower weight decay

@@ -1,0 +1,116 @@
+{
+  "config": "unified_best_rating.yaml",
+  "architecture": [
+    384,
+    256,
+    128,
+    64,
+    32
+  ],
+  "runs": [
+    {
+      "attractive": {
+        "accuracy": 0.578,
+        "ce_loss": 1.138,
+        "mae": 0.452,
+        "rmse": 0.717
+      },
+      "smart": {
+        "accuracy": 0.593,
+        "ce_loss": 1.043,
+        "mae": 0.44,
+        "rmse": 0.713
+      },
+      "trustworthy": {
+        "accuracy": 0.579,
+        "ce_loss": 1.117,
+        "mae": 0.461,
+        "rmse": 0.738
+      },
+      "average": {
+        "accuracy": 0.579,
+        "ce_loss": 1.117,
+        "mae": 0.461,
+        "rmse": 0.738
+      }
+    },
+    {
+      "attractive": {
+        "accuracy": 0.557,
+        "ce_loss": 1.296,
+        "mae": 0.477,
+        "rmse": 0.742
+      },
+      "smart": {
+        "accuracy": 0.595,
+        "ce_loss": 1.165,
+        "mae": 0.434,
+        "rmse": 0.702
+      },
+      "trustworthy": {
+        "accuracy": 0.567,
+        "ce_loss": 1.205,
+        "mae": 0.475,
+        "rmse": 0.749
+      },
+      "average": {
+        "accuracy": 0.567,
+        "ce_loss": 1.205,
+        "mae": 0.475,
+        "rmse": 0.749
+      }
+    },
+    {
+      "attractive": {
+        "accuracy": 0.574,
+        "ce_loss": 1.199,
+        "mae": 0.455,
+        "rmse": 0.719
+      },
+      "smart": {
+        "accuracy": 0.581,
+        "ce_loss": 1.136,
+        "mae": 0.461,
+        "rmse": 0.741
+      },
+      "trustworthy": {
+        "accuracy": 0.573,
+        "ce_loss": 1.161,
+        "mae": 0.468,
+        "rmse": 0.744
+      },
+      "average": {
+        "accuracy": 0.573,
+        "ce_loss": 1.161,
+        "mae": 0.468,
+        "rmse": 0.744
+      }
+    }
+  ],
+  "summary": {
+    "accuracy": {
+      "mean": 0.573,
+      "std": 0.00489897948556636,
+      "min": 0.567,
+      "max": 0.579
+    },
+    "ce_loss": {
+      "mean": 1.161,
+      "std": 0.03592584956081998,
+      "min": 1.117,
+      "max": 1.205
+    },
+    "mae": {
+      "mean": 0.46799999999999997,
+      "std": 0.005715476066494065,
+      "min": 0.461,
+      "max": 0.475
+    },
+    "rmse": {
+      "mean": 0.7436666666666666,
+      "std": 0.004496912521077351,
+      "min": 0.738,
+      "max": 0.749
+    }
+  }
+}

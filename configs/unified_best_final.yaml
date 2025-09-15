@@ -1,0 +1,30 @@
+# Best configuration found through comprehensive hyperparameter search
+# Achieves 73.4% accuracy on comparison task
+
+defaults:
+  - unified_base
+
+task_type: comparison
+
+# Model architecture - Deep and narrow (5 layers)
+model:
+  hidden_dims:
+    - 384
+    - 256
+    - 128
+    - 64
+    - 32
+  activation: gelu
+  dropout: 0.15  # Optimized dropout
+  batch_norm: true
+  layer_norm: false
+  use_user_encoding: true
+
+# Training configuration
+training:
+  epochs: 50  # Optimal epochs to avoid overfitting
+  learning_rate: 0.001
+  validation_split: 0.2
+  augment_swapped_pairs: true
+  optimizer: adamw
+  weight_decay: 0.001  # Lower weight decay works better

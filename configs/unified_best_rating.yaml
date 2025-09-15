@@ -1,0 +1,30 @@
+# Best configuration adapted for rating task
+# Using same optimized architecture from comparison task
+
+defaults:
+  - unified_base
+
+task_type: rating  # Changed to rating task
+
+# Model architecture - Deep and narrow (5 layers) - same as best comparison model
+model:
+  hidden_dims:
+    - 384
+    - 256
+    - 128
+    - 64
+    - 32
+  activation: gelu
+  dropout: 0.15  # Same optimized dropout
+  batch_norm: true
+  layer_norm: false
+  use_user_encoding: true
+
+# Training configuration
+training:
+  epochs: 50  # Same as comparison
+  learning_rate: 0.001
+  validation_split: 0.2
+  augment_swapped_pairs: false  # Not applicable for rating task
+  optimizer: adamw
+  weight_decay: 0.001  # Same lower weight decay
