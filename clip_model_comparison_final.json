@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-09-15 23:51:04",
+  "results": [
+    {
+      "model": "ViT-B/32",
+      "description": "Current baseline",
+      "embedding_dim": 512,
+      "validation_accuracy": 0.652,
+      "num_embeddings": 4602
+    },
+    {
+      "model": "ViT-B/16",
+      "description": "Higher resolution patches",
+      "embedding_dim": 512,
+      "validation_accuracy": 0.655,
+      "num_embeddings": 4602
+    }
+  ]
+}
