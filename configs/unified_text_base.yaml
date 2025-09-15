@@ -1,0 +1,27 @@
+# Base configuration for unified model with text embeddings
+
+seed: 42
+
+task_type: comparison  # 'comparison' or 'rating'
+
+data:
+  val_split: 0.2
+  num_workers: 4
+
+model:
+  hidden_dims: [512, 256, 128]
+  activation: gelu  # relu, gelu, leaky_relu
+  dropout: 0.1
+  use_batchnorm: true
+  use_layernorm: false
+  use_user_embedding: true
+  user_embedding_dim: 32
+
+optimizer:
+  name: adamw  # adam, adamw
+  lr: 0.001
+  weight_decay: 0.01
+
+training:
+  epochs: 50
+  batch_size: 128
