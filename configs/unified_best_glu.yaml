@@ -1,0 +1,33 @@
+task_type: comparison
+
+model:
+  hidden_dims: [384, 256, 128, 64, 32]  # Best 5-layer deep narrow architecture
+  activation: gelu  # Best activation
+  dropout: 0.15  # Best dropout
+  batch_norm: false
+  layer_norm: false
+  use_user_encoding: false
+  use_batchnorm: true  # Best normalization
+  use_layernorm: false
+  use_user_embedding: true
+  user_embedding_dim: 32
+  use_glu: true  # Enable GLU
+
+data:
+  targets: ["attractive", "smart", "trustworthy"]
+  embeddings_cache_file: "clip_embeddings_cache.pkl"
+  force_recompute_embeddings: false
+
+training:
+  epochs: 50  # Best epochs
+  learning_rate: 0.001  # Best LR
+  validation_split: 0.2
+  augment_swapped_pairs: true
+  optimizer: adamw
+  weight_decay: 0.001  # Best weight decay
+  batch_size: 128
+
+gpu:
+  device_id: 1
+
+seed: 42

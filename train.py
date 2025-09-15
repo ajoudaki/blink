@@ -22,6 +22,55 @@ from PIL import Image
 from datetime import datetime
 from pathlib import Path
 
+# Device configuration
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+# ============================================================================
+# GATED LINEAR UNITS (GLU) IMPLEMENTATION
+# ============================================================================
+
+class GatedLinearUnit(nn.Module):
+    """Gated Linear Unit layer."""
+
+    def __init__(self, input_dim, output_dim):
+        super().__init__()
+        # Two linear transformations: one for values, one for gates
+        self.linear = nn.Linear(input_dim, output_dim)
+        self.gate = nn.Linear(input_dim, output_dim)
+
+    def forward(self, x):
+        # GLU: element-wise product of linear transformation and sigmoid gate
+        return self.linear(x) * torch.sigmoid(self.gate(x))
+
+
+class GLUBlock(nn.Module):
+    """A block with GLU, normalization, and dropout."""
+
+    def __init__(self, input_dim, output_dim, use_batchnorm=True, use_layernorm=False, dropout=0.1):
+        super().__init__()
+
+        # Gated Linear Unit
+        self.glu = GatedLinearUnit(input_dim, output_dim)
+
+        # Normalization
+        self.norm = None
+        if use_batchnorm:
+            self.norm = nn.BatchNorm1d(output_dim)
+        elif use_layernorm:
+            self.norm = nn.LayerNorm(output_dim)
+
+        # Dropout
+        self.dropout = nn.Dropout(dropout) if dropout > 0 else None
+
+    def forward(self, x):
+        x = self.glu(x)
+        if self.norm is not None:
+            x = self.norm(x)
+        if self.dropout is not None:
+            x = self.dropout(x)
+        return x
+
 
 # ============================================================================
 # EMBEDDING EXTRACTION
@@ -95,31 +144,45 @@ class BaseEncoder(nn.Module):
         layers = []
         prev_dim = input_dim
 
+        # Check if using GLU
+        use_glu = cfg.model.get('use_glu', False)
+
         for hidden_dim in cfg.model.hidden_dims:
-            layers.append(nn.Linear(prev_dim, hidden_dim))
+            if use_glu:
+                # Use GLU block instead of regular linear layer
+                layers.append(GLUBlock(
+                    prev_dim,
+                    hidden_dim,
+                    use_batchnorm=cfg.model.get('batch_norm', False),
+                    use_layernorm=cfg.model.get('layer_norm', False),
+                    dropout=cfg.model.dropout
+                ))
+            else:
+                # Regular linear layer
+                layers.append(nn.Linear(prev_dim, hidden_dim))
 
-            # Normalization
-            if cfg.model.get('batch_norm', False):
-                layers.append(nn.BatchNorm1d(hidden_dim))
-            elif cfg.model.get('layer_norm', False):
-                layers.append(nn.LayerNorm(hidden_dim))
+                # Normalization
+                if cfg.model.get('batch_norm', False):
+                    layers.append(nn.BatchNorm1d(hidden_dim))
+                elif cfg.model.get('layer_norm', False):
+                    layers.append(nn.LayerNorm(hidden_dim))
 
-            # Activation
-            activation = cfg.model.activation
-            if activation == 'relu':
-                layers.append(nn.ReLU())
-            elif activation == 'gelu':
-                layers.append(nn.GELU())
-            elif activation == 'tanh':
-                layers.append(nn.Tanh())
-            elif activation == 'leaky_relu':
-                layers.append(nn.LeakyReLU(0.1))
-            elif activation == 'elu':
-                layers.append(nn.ELU())
+                # Activation
+                activation = cfg.model.activation
+                if activation == 'relu':
+                    layers.append(nn.ReLU())
+                elif activation == 'gelu':
+                    layers.append(nn.GELU())
+                elif activation == 'tanh':
+                    layers.append(nn.Tanh())
+                elif activation == 'leaky_relu':
+                    layers.append(nn.LeakyReLU(0.1))
+                elif activation == 'elu':
+                    layers.append(nn.ELU())
 
-            # Dropout
-            if cfg.model.dropout > 0:
-                layers.append(nn.Dropout(cfg.model.dropout))
+                # Dropout (only if not using GLU, as GLU block handles its own dropout)
+                if cfg.model.dropout > 0:
+                    layers.append(nn.Dropout(cfg.model.dropout))
 
             prev_dim = hidden_dim
 
