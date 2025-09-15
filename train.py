@@ -132,11 +132,11 @@ class BaseEncoder(nn.Module):
     For rating: outputs 4 scores per target (4-way classification)
     """
 
-    def __init__(self, cfg, n_users=None):
+    def __init__(self, cfg, n_users=None, embedding_dim=512):
         super().__init__()
 
         # Determine input dimension
-        input_dim = 512  # CLIP embedding size
+        input_dim = embedding_dim  # CLIP embedding size (auto-detected)
         if cfg.model.get('use_user_encoding', False) and n_users:
             input_dim += n_users
 
@@ -239,9 +239,9 @@ class UnifiedModel(nn.Module):
     Uses the same base encoder but different readout strategies.
     """
 
-    def __init__(self, cfg, n_users=None):
+    def __init__(self, cfg, n_users=None, embedding_dim=512):
         super().__init__()
-        self.encoder = BaseEncoder(cfg, n_users)
+        self.encoder = BaseEncoder(cfg, n_users, embedding_dim)
         self.task_type = cfg.task_type
 
     def forward_rating(self, x, user_encoding=None, target='attractive'):
@@ -546,6 +546,13 @@ def main(cfg: DictConfig):
         force_recompute=cfg.data.get('force_recompute_embeddings', False)
     )
 
+    # Detect embedding dimension from loaded embeddings
+    if embeddings:
+        embedding_dim = next(iter(embeddings.values())).shape[0]
+        print(f"Detected embedding dimension: {embedding_dim}")
+    else:
+        embedding_dim = 512  # Default fallback
+
     # Prepare user encoder if needed
     user_encoder = None
     n_users = None
@@ -637,7 +644,7 @@ def main(cfg: DictConfig):
                 val_data[target]['user'] = torch.FloatTensor(data['user'][val_idx]).to(device)
 
     # Initialize model
-    model = UnifiedModel(cfg, n_users).to(device)
+    model = UnifiedModel(cfg, n_users, embedding_dim).to(device)
 
     # Train model
     print("\nTraining unified model...")

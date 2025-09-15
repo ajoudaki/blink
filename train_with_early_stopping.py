@@ -69,10 +69,10 @@ class GLUBlock(nn.Module):
 class BaseEncoder(nn.Module):
     """Shared base encoder for both rating and comparison tasks."""
 
-    def __init__(self, cfg, n_users=0):
+    def __init__(self, cfg, n_users=0, embedding_dim=512):
         super().__init__()
 
-        input_dim = 512  # CLIP embedding dimension
+        input_dim = embedding_dim  # CLIP embedding dimension (auto-detected)
 
         # Add user embedding dimension if using user embeddings
         if cfg.model.get('use_user_embedding', False) and n_users > 0:
@@ -168,14 +168,14 @@ class BaseEncoder(nn.Module):
 class UnifiedModel(nn.Module):
     """Unified model for both rating and comparison tasks."""
 
-    def __init__(self, cfg, n_users=0):
+    def __init__(self, cfg, n_users=0, embedding_dim=512):
         super().__init__()
 
         self.cfg = cfg
         self.task_type = cfg.task_type
 
         # Shared base encoder
-        self.base_encoder = BaseEncoder(cfg, n_users)
+        self.base_encoder = BaseEncoder(cfg, n_users, embedding_dim)
 
         # Task-specific heads
         self.heads = nn.ModuleDict()
@@ -669,8 +669,19 @@ def main(cfg: DictConfig):
         cfg, device, val_split=val_split, test_split=test_split
     )
 
+    # Detect embedding dimension from the loaded data
+    embedding_dim = 512  # default
+    for target, data in train_data.items():
+        if 'X' in data and data['X'] is not None:
+            embedding_dim = data['X'].shape[1]
+            break
+        elif 'X1' in data and data['X1'] is not None:
+            embedding_dim = data['X1'].shape[1]
+            break
+    print(f"Model will use embedding dimension: {embedding_dim}")
+
     # Initialize model
-    model = UnifiedModel(cfg, n_users).to(device)
+    model = UnifiedModel(cfg, n_users, embedding_dim).to(device)
 
     # Train model with early stopping
     print("\nTraining unified model with early stopping...")
