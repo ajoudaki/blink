@@ -96,12 +96,55 @@ The `analysis/` directory contains Python code and Jupyter notebooks for data qu
   - Comparative vs individual rating analysis
   - T-SNE visualization of latent image features
 
+## Labeler Quality Assessment Metrics
+
+The codebase implements several sophisticated metrics to assess the quality and consistency of human labelers:
+
+### 1. Individual vs Comparative Consistency (`normal_vs_comparative_user_plot()`)
+- **Location**: `prerequisite.py` lines 127-159
+- **Method**: Cross-validates a user's comparative judgments against their individual ratings
+- **Metrics**:
+  - **True Positives (TP)**: Comparisons consistent with individual ratings
+  - **False Positives (FP)**: Contradictory comparisons
+- **Example**: If user rated Image A=4 and Image B=2 individually, but chose B in comparison → FP
+- **Output**: Consistency score = TP/(TP+FP) per user
+
+### 2. Random Labeling Detection
+- **Method**: SVD with shuffling (`show_svd_with_without_shuffling()`)
+- **Purpose**: Establishes baseline for random clicking behavior
+- **Implementation**: Shuffles portions of labels and measures RMSE impact
+- **Threshold**: Users with RMSE similar to shuffled data are flagged
+
+### 3. Temporal Analysis
+- **Location**: `show_run_time_dist()` in `prerequisite.py`
+- **Method**: Analyzes time between consecutive labels
+- **Detection**: Unusually fast labeling indicates potential random clicking
+- **Visualization**: Histogram of inter-label time intervals per user
+
+### 4. Matrix Completion Quality
+- **Method**: K-fold cross-validation using SVD
+- **Implementation**: `return_rmse_of_svd_kfold()` with cv=5
+- **Purpose**: Identifies users whose ratings are hard to predict (outliers)
+- **Output**: RMSE scores per attribute (attractiveness, smartness, trustworthiness)
+
+### 5. Minimum Activity Threshold
+- **Location**: `utils.py` line 64-66
+- **Method**: Filters users by minimum number of labels
+- **Purpose**: Ensures sufficient data for reliability assessment
+
+### 6. Transitivity Consistency (Not Implemented - Opportunity)
+- **Concept**: For image triplets (A,B,C) with all pairs compared:
+  - If A > B and B > C, then A should > C
+  - Violation: A > B, B > C, but C > A (cycle)
+- **Benefit**: Would detect logical inconsistencies in comparative judgments
+- **Status**: Not found in current codebase but valuable for future implementation
+
 ## Key Insights from Analysis
 
-1. **Label Quality**: The codebase includes methods to assess labeler consistency and identify potential random/low-quality annotations
-2. **Matrix Completion**: SVD-based approaches are used to predict missing ratings and understand latent factors
-3. **User Behavior**: Analysis of how different users rate images and their consistency patterns
-4. **Comparison Validation**: Methods to validate pairwise comparisons against individual ratings
+1. **Label Quality**: Multiple metrics assess labeler consistency across rating paradigms
+2. **Matrix Completion**: SVD-based approaches predict missing ratings and identify outliers
+3. **User Behavior**: Temporal and consistency patterns reveal labeling quality
+4. **Comparison Validation**: Cross-validation between individual and comparative ratings
 
 ## Usage for ML Pipeline
 
