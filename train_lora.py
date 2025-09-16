@@ -331,7 +331,7 @@ def main(cfg: DictConfig):
 
     # Setup
     os.environ['CUDA_VISIBLE_DEVICES'] = str(cfg.gpu.device_id)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     print(f"CLIP Model: {cfg.clip_model}")
     print(f"LoRA rank: {cfg.lora.rank}, alpha: {cfg.lora.alpha}")
@@ -345,6 +345,16 @@ def main(cfg: DictConfig):
     # Load CLIP model
     print(f"Loading CLIP model: {cfg.clip_model}")
     model, preprocess = clip.load(cfg.clip_model, device=device)
+
+    # Enable gradient checkpointing for memory efficiency
+    if hasattr(cfg.training, 'gradient_checkpointing') and cfg.training.gradient_checkpointing:
+        print("Enabling gradient checkpointing...")
+        # For vision transformer
+        if hasattr(model.visual, 'set_grad_checkpointing'):
+            model.visual.set_grad_checkpointing(True)
+        # For text transformer
+        if hasattr(model.transformer, 'gradient_checkpointing_enable'):
+            model.transformer.gradient_checkpointing_enable()
 
     # Freeze original parameters
     for param in model.parameters():
