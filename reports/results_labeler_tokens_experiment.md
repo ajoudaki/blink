@@ -94,8 +94,43 @@
 4. The labeler token approach effectively enables multi-user preference learning
 5. Temperature scaling (0.15) and text augmentation improve generalization
 
+## All-Users Experiment Results (6 Users)
+
+### Configuration Changes
+- **Users**: Extended to 6 users with most data (>2000 samples each)
+- **Same LoRA settings**: Rank 4, Alpha 1.0, Temperature 0.15
+- **Batch sizes**: 128 (train), 256 (validation) - reduced due to more users
+
+### Training Results (11 Epochs)
+
+**Aggregate Metrics:**
+| Epoch | Val Loss | Val Acc | Attractive | Smart | Trustworthy | Avg User Acc |
+|-------|----------|---------|------------|-------|-------------|--------------|
+| 1 | 0.7289 | 57.21% | 58.61% | 58.61% | 54.41% | 57.21% |
+| 5 | 0.6326 | 64.66% | 65.93% | 65.82% | 62.23% | 64.66% |
+| **10** | 0.5962 | **68.43%** | **69.59%** | **69.47%** | **66.24%** | **68.43%** |
+| 11 | 0.5975 | 68.30% | 69.42% | 69.35% | 66.13% | 68.30% |
+
+**Per-User Accuracy (Best Epoch 10):**
+| User Token | User ID | Accuracy |
+|------------|---------|----------|
+| <user1> | 5fc68c7d... | 80.55% |
+| <user2> | 603951f6... | 57.14% |
+| <user3> | 600e9574... | 50.97% |
+| <user4> | 600edd5f... | 80.82% |
+| <user5> | 60088dd9... | 66.28% |
+| <user6> | 5fc68df8... | 74.80% |
+
+### Key Observations
+1. **Overall Performance**: Peak 68.43% accuracy at Epoch 10 (lower than 2-user experiment's 75.55%)
+2. **User Variance**: Wide range from 50.97% (User 3) to 80.82% (User 4)
+3. **Easier Users**: Users 1 & 4 achieve >80% accuracy (consistent, predictable preferences)
+4. **Harder Users**: User 3 remains at ~51% (highly diverse preferences)
+5. **Scaling Challenge**: Performance degrades with more users, suggesting capacity limitations
+
 ## Future Directions
-- Experiment with larger LoRA ranks for User 2
+- Experiment with larger LoRA ranks for harder users
 - Try different CLIP model variants (ViT-L/14)
 - Implement weighted loss based on user confidence scores
-- Test with more than 2 users simultaneously
+- Visual Prompt Tuning for symmetric multimodal conditioning (in progress)
+- Explore disentanglement mechanisms for better user-specific learning
