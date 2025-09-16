@@ -80,21 +80,30 @@ class ComparisonDataset(Dataset):
         # Merge dataframes
         df = df_data.merge(df_labels, left_on='_id', right_on='item_id', how='inner')
 
-        # Get top 2 users by label count
+        # Get all users with sufficient data
         user_counts = df['user_id'].value_counts()
-        self.top_users = user_counts.head(2).index.tolist()
-        print(f"Top 2 users: {self.top_users}")
-        print(f"User 1: {self.top_users[0]} with {user_counts[self.top_users[0]]} labels")
-        print(f"User 2: {self.top_users[1]} with {user_counts[self.top_users[1]]} labels")
 
-        # Filter to top 2 users
+        # Filter users with at least 100 samples (configurable)
+        min_samples = getattr(cfg, 'min_samples_per_user', 100)
+        self.top_users = [user_id for user_id, count in user_counts.items() if count >= min_samples]
+
+        # Optionally limit to top N users
+        max_users = getattr(cfg, 'max_users', None)
+        if max_users:
+            self.top_users = self.top_users[:max_users]
+
+        print(f"Selected {len(self.top_users)} users with >= {min_samples} samples:")
+        for i, user_id in enumerate(self.top_users):
+            print(f"User {i+1}: {user_id} with {user_counts[user_id]} labels")
+
+        # Filter to selected users
         df = df[df['user_id'].isin(self.top_users)]
-        print(f"Filtered to top 2 users: {len(df)} samples")
+        print(f"Filtered to {len(self.top_users)} users: {len(df)} samples")
 
         # Create user ID mapping for special tokens
         self.user_to_token = {
-            self.top_users[0]: "<user1>",
-            self.top_users[1]: "<user2>"
+            user_id: f"<user{i+1}>"
+            for i, user_id in enumerate(self.top_users)
         }
 
         # Convert to samples with labeler tokens

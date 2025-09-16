@@ -1,0 +1,45 @@
+# Configuration for LoRA fine-tuning with labeler-specific tokens - ALL USERS
+
+# CLIP model configuration
+clip_model: "ViT-B/32"
+
+# LoRA configuration
+lora:
+  rank: 4
+  alpha: 1.0
+  temperature: 0.15
+
+# Data configuration
+data:
+  num_workers: 4
+  augment_text: true
+  val_split: 0.3
+  test_split: 0.3
+
+# User filtering configuration
+min_samples_per_user: 100  # Minimum samples required per user
+max_users: null  # Set to None for all users, or a number to limit
+
+# Training configuration
+training:
+  batch_size: 128  # Reduced for more users
+  eval_batch_size: 256
+  learning_rate: 1e-4
+  weight_decay: 0.01
+  max_epochs: 15  # More epochs for convergence with more users
+  eval_every: 1
+
+# GPU configuration
+gpu:
+  device_id: 0
+
+# Text templates for augmentation
+text_templates:
+  - "{}"  # Just the bare word
+  - "a {} person"
+  - "this person looks {}"
+  - "this person is {}"
+  - "this person appears {}"
+
+# Seed for reproducibility
+seed: 42
