@@ -5,8 +5,8 @@ clip_model: "ViT-B/32"
 
 # LoRA configuration
 lora:
-  rank: 4
-  alpha: 1.0
+  rank: 8
+  alpha: 4.0
   temperature: 0.15
   # Visual prompts: Single token per user (like CLS)
 
@@ -27,7 +27,7 @@ training:
   eval_batch_size: 256
   learning_rate: 1e-4
   weight_decay: 0.01
-  max_epochs: 15  # More epochs for convergence with more users
+  max_epochs: 20  # More epochs for convergence with more users
   eval_every: 1
 
 # GPU configuration
