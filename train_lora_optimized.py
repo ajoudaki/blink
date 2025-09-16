@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-LoRA fine-tuning for CLIP using text-image similarity.
-Clean implementation without decoder networks.
+Optimized LoRA fine-tuning with GPU-based transformations.
 """
 
 import os
@@ -84,15 +83,66 @@ def add_lora_to_clip(model, rank=4, alpha=1.0, device='cuda'):
 
 
 # ============================================================================
-# Dataset
+# GPU-based Augmentations
 # ============================================================================
 
-class ComparisonDataset(Dataset):
-    """Dataset for comparison task using CLIP."""
+class GPUAugmentation(nn.Module):
+    """GPU-based image augmentations."""
+
+    def __init__(self, enable=True):
+        super().__init__()
+        self.enable = enable
+
+    def forward(self, x):
+        """Apply augmentations on GPU tensors."""
+        if not self.enable or not self.training:
+            return x
+
+        batch_size = x.shape[0]
+        device = x.device
+
+        # Random horizontal flip (50% chance per image)
+        flip_mask = torch.rand(batch_size, device=device) > 0.5
+        x[flip_mask] = torch.flip(x[flip_mask], dims=[-1])
+
+        # Random grayscale (20% chance per image)
+        gray_mask = torch.rand(batch_size, device=device) < 0.2
+        if gray_mask.any():
+            # Convert to grayscale for selected images
+            gray_images = 0.2989 * x[gray_mask, 0] + 0.5870 * x[gray_mask, 1] + 0.1140 * x[gray_mask, 2]
+            x[gray_mask, 0] = gray_images
+            x[gray_mask, 1] = gray_images
+            x[gray_mask, 2] = gray_images
+
+        # Color jitter (brightness, contrast, saturation)
+        # Apply different random values per image
+        for i in range(batch_size):
+            # Brightness adjustment (±20%)
+            brightness_factor = 0.8 + torch.rand(1, device=device).item() * 0.4
+            x[i] = x[i] * brightness_factor
+
+            # Contrast adjustment (±20%)
+            if torch.rand(1, device=device) < 0.5:
+                mean = x[i].mean(dim=[1, 2], keepdim=True)
+                contrast_factor = 0.8 + torch.rand(1, device=device).item() * 0.4
+                x[i] = (x[i] - mean) * contrast_factor + mean
+
+        # Clamp values to valid range
+        x = torch.clamp(x, -2.5, 2.5)  # Approximate range for normalized images
+
+        return x
+
+
+# ============================================================================
+# Optimized Dataset
+# ============================================================================
+
+class OptimizedComparisonDataset(Dataset):
+    """Optimized dataset with caching and faster loading."""
 
     def __init__(self, data_file, label_file, preprocess, split='train',
                  val_split=0.1, test_split=0.1, seed=42, single_user=None,
-                 enable_image_aug=False):
+                 cache_images=False, device='cuda'):
 
         # Load data
         compare_data = pd.read_excel(data_file)
@@ -127,20 +177,28 @@ class ComparisonDataset(Dataset):
         self.df = df.iloc[indices].reset_index(drop=True)
         self.preprocess = preprocess
         self.split = split
-        self.enable_image_aug = enable_image_aug and (split == 'train')
+        self.cache_images = cache_images and (split == 'train')
+        self.device = device
 
-        # Image augmentations for training (semantic-preserving)
-        if self.enable_image_aug:
-            self.image_augmentations = transforms.Compose([
-                transforms.RandomHorizontalFlip(p=0.5),  # Horizontal flip
-                transforms.RandomGrayscale(p=0.2),  # Convert to grayscale 20% of time
-                transforms.ColorJitter(
-                    brightness=0.2,  # Adjust brightness ±20%
-                    contrast=0.2,    # Adjust contrast ±20%
-                    saturation=0.2,  # Adjust saturation ±20%
-                    hue=0.05        # Slight hue shift
-                ),
-            ])
+        # Cache for preprocessed images
+        self.image_cache = {}
+
+        # Pre-load images if caching is enabled
+        if self.cache_images:
+            print(f"Pre-loading {len(self.df)} images to cache...")
+            for idx in tqdm(range(len(self.df))):
+                row = self.df.iloc[idx]
+                im1_path = self.fix_image_path(row['im1_path'])
+                im2_path = self.fix_image_path(row['im2_path'])
+
+                if im1_path not in self.image_cache:
+                    img = Image.open(im1_path).convert('RGB')
+                    self.image_cache[im1_path] = self.preprocess(img)
+
+                if im2_path not in self.image_cache:
+                    img = Image.open(im2_path).convert('RGB')
+                    self.image_cache[im2_path] = self.preprocess(img)
+            print(f"Cached {len(self.image_cache)} unique images")
 
     def __len__(self):
         # Each sample appears once per epoch (but with 3 targets)
@@ -158,41 +216,57 @@ class ComparisonDataset(Dataset):
         im1_path = self.fix_image_path(row['im1_path'])
         im2_path = self.fix_image_path(row['im2_path'])
 
-        # Load images
-        image1_pil = Image.open(im1_path).convert('RGB')
-        image2_pil = Image.open(im2_path).convert('RGB')
+        # Load images (from cache if available)
+        if self.cache_images and im1_path in self.image_cache:
+            image1 = self.image_cache[im1_path].clone()
+            image2 = self.image_cache[im2_path].clone()
+        else:
+            # Load and preprocess images
+            image1_pil = Image.open(im1_path).convert('RGB')
+            image2_pil = Image.open(im2_path).convert('RGB')
 
-        # Apply augmentations during training
-        if self.enable_image_aug:
-            image1_pil = self.image_augmentations(image1_pil)
-            image2_pil = self.image_augmentations(image2_pil)
-
-        # Apply CLIP preprocessing
-        image1 = self.preprocess(image1_pil)
-        image2 = self.preprocess(image2_pil)
-
-        # Get label for this target
-        label = row[f'{target}_label']
+            # Apply CLIP preprocessing
+            image1 = self.preprocess(image1_pil)
+            image2 = self.preprocess(image2_pil)
 
         return {
             'image1': image1,
             'image2': image2,
-            'target': target,
-            'label': torch.tensor(label, dtype=torch.long)
+            'label': row[f'{target}_label'],
+            'target': target
         }
 
     def fix_image_path(self, original_path):
-        """Convert Excel paths to local paths."""
+        """Convert Excel paths to local paths - matching original logic."""
         filename = os.path.basename(original_path)
+
+        # Try multiple directory variations (typos and variations)
         possible_paths = [
             f"data/ffhq/src/{filename}",
             f"data/ffhq2/src/{filename}",
-            f"data/ffqh/src/{filename}",
+            f"data/ffqh/src/{filename}",  # Note: typo in original
+            f"pics_small/{filename}",
         ]
+
+        # Also try with leading zeros if it's a webp file
+        if filename.endswith('.webp'):
+            try:
+                num = filename.replace('.webp', '')
+                padded_filename = f"{int(num):05d}.webp"
+                possible_paths.extend([
+                    f"data/ffhq/src/{padded_filename}",
+                    f"data/ffhq2/src/{padded_filename}",
+                    f"data/ffqh/src/{padded_filename}",
+                ])
+            except:
+                pass
+
         for path in possible_paths:
             if os.path.exists(path):
                 return path
-        raise FileNotFoundError(f"Image not found: {original_path}")
+
+        # Return original if nothing found (let it fail naturally)
+        return original_path
 
 
 # ============================================================================
@@ -220,15 +294,18 @@ def compute_similarity_probs(image1_features, image2_features, text_features, te
     return probs
 
 
-def train_epoch(model, dataloader, lora_params, optimizer, cfg, device):
-    """Train for one epoch."""
+def train_epoch(model, dataloader, lora_params, optimizer, cfg, device, gpu_augment=None):
+    """Train for one epoch with GPU augmentations."""
     model.train()
+    if gpu_augment:
+        gpu_augment.training = True
+
     total_loss = 0
     correct = 0
     total = 0
 
     # Text templates for augmentation
-    templates = cfg.get('text_templates', ["a {} person"])
+    templates = cfg.get('text_templates', ["{}", "a {} person"])
 
     # Pre-encode target texts with all templates
     target_texts = {}
@@ -244,10 +321,15 @@ def train_epoch(model, dataloader, lora_params, optimizer, cfg, device):
     pbar = tqdm(dataloader, desc="Training")
     for i, batch in enumerate(pbar):
         # Move to device
-        image1 = batch['image1'].to(device)
-        image2 = batch['image2'].to(device)
-        labels = batch['label'].to(device)
+        image1 = batch['image1'].to(device, non_blocking=True)
+        image2 = batch['image2'].to(device, non_blocking=True)
+        labels = batch['label'].to(device, non_blocking=True)
         targets = batch['target']
+
+        # Apply GPU augmentations
+        if gpu_augment:
+            image1 = gpu_augment(image1)
+            image2 = gpu_augment(image2)
 
         # Get image features
         image1_features = model.encode_image(image1)
@@ -282,15 +364,18 @@ def train_epoch(model, dataloader, lora_params, optimizer, cfg, device):
         # Statistics
         batch_loss = loss.item()
         total_loss += batch_loss
-        preds = probs.argmax(dim=-1)
-        correct += (preds == labels).sum().item()
+        predictions = (probs[:, 1] > 0.5).long()
+        correct += (predictions == labels).sum().item()
         total += labels.size(0)
 
         # Update progress bar with running average
-        running_avg_loss = total_loss / (i + 1)
-        pbar.set_postfix({'CE_loss': f'{batch_loss:.4f}', 'avg_loss': f'{running_avg_loss:.4f}'})
+        avg_loss = total_loss / (i + 1)
+        pbar.set_postfix({'CE_loss': batch_loss, 'avg_loss': avg_loss})
 
-    return total_loss / len(dataloader), correct / total
+    accuracy = correct / total if total > 0 else 0
+    avg_loss = total_loss / len(dataloader)
+
+    return avg_loss, accuracy
 
 
 def evaluate(model, dataloader, cfg, device):
@@ -303,7 +388,7 @@ def evaluate(model, dataloader, cfg, device):
     target_total = {'attractive': 0, 'smart': 0, 'trustworthy': 0}
 
     # Use the base template for evaluation (consistent evaluation)
-    eval_template = cfg.get('text_templates', ["a {} person"])[0]
+    eval_template = cfg.get('text_templates', ["{}", "a {} person"])[0]
 
     # Pre-encode target texts
     target_texts = {
@@ -319,9 +404,9 @@ def evaluate(model, dataloader, cfg, device):
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating"):
             # Move to device
-            image1 = batch['image1'].to(device)
-            image2 = batch['image2'].to(device)
-            labels = batch['label'].to(device)
+            image1 = batch['image1'].to(device, non_blocking=True)
+            image2 = batch['image2'].to(device, non_blocking=True)
+            labels = batch['label'].to(device, non_blocking=True)
             targets = batch['target']
 
             # Get features
@@ -345,67 +430,85 @@ def evaluate(model, dataloader, cfg, device):
             loss = F.cross_entropy(probs, labels)
             total_loss += loss.item()
 
-            # Per-target accuracy
-            preds = probs.argmax(dim=-1)
-            for i, target in enumerate(targets):
-                target_correct[target] += (preds[i] == labels[i]).item()
-                target_total[target] += 1
+            # Predictions
+            predictions = (probs[:, 1] > 0.5).long()
 
-    # Compute accuracies
-    accuracies = {t: target_correct[t] / max(target_total[t], 1)
-                  for t in target_texts.keys()}
-    avg_accuracy = np.mean(list(accuracies.values()))
+            # Update per-target metrics
+            for i, t in enumerate(targets):
+                target_correct[t] += (predictions[i] == labels[i]).item()
+                target_total[t] += 1
 
-    return total_loss / len(dataloader), avg_accuracy, accuracies
+    # Calculate metrics
+    avg_loss = total_loss / len(dataloader)
+    total_correct = sum(target_correct.values())
+    total_samples = sum(target_total.values())
+    accuracy = total_correct / total_samples if total_samples > 0 else 0
+
+    target_accuracies = {}
+    for target in target_correct:
+        if target_total[target] > 0:
+            target_accuracies[target] = target_correct[target] / target_total[target]
+        else:
+            target_accuracies[target] = 0.0
+
+    return avg_loss, accuracy, target_accuracies
 
 
 # ============================================================================
-# Main
+# Main Training Loop
 # ============================================================================
 
-@hydra.main(version_base=None, config_path="configs", config_name="lora_config")
+@hydra.main(config_path="configs", config_name="lora_single_user", version_base=None)
 def main(cfg: DictConfig):
-    """Main training function for LoRA fine-tuning."""
-
-    # Setup
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(cfg.gpu.device_id)
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    # Set device
+    device_id = cfg.get('gpu', {}).get('device_id', 0)
+    device = torch.device(f'cuda:{device_id}' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
+
+    # Enable mixed precision for faster training
+    use_amp = cfg.get('use_mixed_precision', True)
+    scaler = torch.cuda.amp.GradScaler() if use_amp else None
+
+    # Set seed
+    torch.manual_seed(cfg.seed)
+    np.random.seed(cfg.seed)
+
+    # Load CLIP model
     print(f"CLIP Model: {cfg.clip_model}")
     print(f"LoRA rank: {cfg.lora.rank}, alpha: {cfg.lora.alpha}")
 
     # Create run directory
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_dir = Path("runs") / f"lora_{cfg.clip_model.replace('/', '_')}_{timestamp}"
+    model_name = cfg.clip_model.replace("/", "_")
+    run_dir = Path(f"runs/lora_{model_name}_{timestamp}")
     run_dir.mkdir(parents=True, exist_ok=True)
     print(f"Run directory: {run_dir}")
 
-    # Load CLIP model
+    # Load CLIP
     print(f"Loading CLIP model: {cfg.clip_model}")
     model, preprocess = clip.load(cfg.clip_model, device=device)
 
-    # Enable gradient checkpointing for memory efficiency
-    if hasattr(cfg.training, 'gradient_checkpointing') and cfg.training.gradient_checkpointing:
-        print("Enabling gradient checkpointing...")
-        # For vision transformer
-        if hasattr(model.visual, 'set_grad_checkpointing'):
-            model.visual.set_grad_checkpointing(True)
-        # For text transformer
-        if hasattr(model.transformer, 'gradient_checkpointing_enable'):
-            model.transformer.gradient_checkpointing_enable()
+    # Add LoRA adapters
+    lora_layers = add_lora_to_clip(model, rank=cfg.lora.rank, alpha=cfg.lora.alpha, device=device)
+    print(f"Added {len(lora_layers)} LoRA adapter layers")
 
-    # Freeze original parameters
+    # Freeze base model
     for param in model.parameters():
         param.requires_grad = False
 
-    # Add LoRA adapters
-    lora_layers = add_lora_to_clip(model, cfg.lora.rank, cfg.lora.alpha, device)
-    print(f"Added {len(lora_layers)} LoRA adapter layers")
+    # Enable gradients for LoRA only
+    for lora in lora_layers.values():
+        for param in lora.parameters():
+            param.requires_grad = True
+
+    # Create GPU augmentation module
+    gpu_augment = GPUAugmentation(enable=cfg.get('enable_image_augmentation', True)).to(device)
 
     # Create datasets
     single_user = cfg.data.get('single_user', None)
+    cache_images = cfg.get('cache_images', False)
 
-    train_dataset = ComparisonDataset(
+    train_dataset = OptimizedComparisonDataset(
         'data/big_compare_data.xlsx',
         'data/big_compare_label.xlsx',
         preprocess, split='train',
@@ -413,10 +516,11 @@ def main(cfg: DictConfig):
         test_split=cfg.data.test_split,
         seed=cfg.seed,
         single_user=single_user,
-        enable_image_aug=cfg.get('enable_image_augmentation', True)
+        cache_images=cache_images,
+        device=device
     )
 
-    val_dataset = ComparisonDataset(
+    val_dataset = OptimizedComparisonDataset(
         'data/big_compare_data.xlsx',
         'data/big_compare_label.xlsx',
         preprocess, split='val',
@@ -424,10 +528,11 @@ def main(cfg: DictConfig):
         test_split=cfg.data.test_split,
         seed=cfg.seed,
         single_user=single_user,
-        enable_image_aug=False  # No augmentation for validation
+        cache_images=False,  # No caching for validation
+        device=device
     )
 
-    test_dataset = ComparisonDataset(
+    test_dataset = OptimizedComparisonDataset(
         'data/big_compare_data.xlsx',
         'data/big_compare_label.xlsx',
         preprocess, split='test',
@@ -435,123 +540,110 @@ def main(cfg: DictConfig):
         test_split=cfg.data.test_split,
         seed=cfg.seed,
         single_user=single_user,
-        enable_image_aug=False  # No augmentation for test
+        cache_images=False,  # No caching for test
+        device=device
     )
 
     print(f"Dataset sizes - Train: {len(train_dataset)}, Val: {len(val_dataset)}, Test: {len(test_dataset)}")
 
-    # Create dataloaders
+    # Create dataloaders with optimizations
     train_loader = DataLoader(
-        train_dataset, batch_size=cfg.training.batch_size,
-        shuffle=True, num_workers=cfg.data.num_workers
+        train_dataset,
+        batch_size=cfg.training.batch_size,
+        shuffle=True,
+        num_workers=cfg.data.num_workers,
+        pin_memory=True,  # Pin memory for faster transfer
+        persistent_workers=True if cfg.data.num_workers > 0 else False,  # Keep workers alive
+        prefetch_factor=2 if cfg.data.num_workers > 0 else None  # Prefetch batches
     )
 
-    eval_batch_size = cfg.training.get('eval_batch_size', cfg.training.batch_size * 2)
-
     val_loader = DataLoader(
-        val_dataset, batch_size=eval_batch_size,
-        shuffle=False, num_workers=cfg.data.num_workers
+        val_dataset,
+        batch_size=cfg.training.eval_batch_size,
+        shuffle=False,
+        num_workers=cfg.data.num_workers,
+        pin_memory=True,
+        persistent_workers=True if cfg.data.num_workers > 0 else False,
+        prefetch_factor=2 if cfg.data.num_workers > 0 else None
     )
 
     test_loader = DataLoader(
-        test_dataset, batch_size=eval_batch_size,
-        shuffle=False, num_workers=cfg.data.num_workers
+        test_dataset,
+        batch_size=cfg.training.eval_batch_size,
+        shuffle=False,
+        num_workers=cfg.data.num_workers,
+        pin_memory=True
     )
 
-    # Setup optimizer (only LoRA parameters)
-    lora_params = []
-    for layer in lora_layers.values():
-        lora_params.extend([layer.lora_A, layer.lora_B])
-
+    # Setup optimizer
     optimizer = torch.optim.AdamW(
-        lora_params,
+        [p for lora in lora_layers.values() for p in lora.parameters()],
         lr=cfg.training.learning_rate,
         weight_decay=cfg.training.weight_decay
     )
 
-    # Training loop with early stopping
-    best_val_acc = 0
-    best_epoch = 0
-    patience_counter = 0
-    history = {'train_loss': [], 'val_loss': [], 'val_acc': []}
-
+    # Training loop
     print("\nStarting training...")
+    best_val_acc = 0
+    patience_counter = 0
+
     for epoch in range(cfg.training.max_epochs):
+        print(f"\nEpoch {epoch+1}/{cfg.training.max_epochs}")
+
         # Train
         train_loss, train_acc = train_epoch(
-            model, train_loader, lora_params, optimizer, cfg, device
+            model, train_loader, lora_layers, optimizer, cfg, device, gpu_augment
         )
 
-        # Validate
-        val_loss, val_acc, val_accs = evaluate(model, val_loader, cfg, device)
+        # Evaluate
+        val_loss, val_acc, val_target_accs = evaluate(model, val_loader, cfg, device)
 
-        # Save history
-        history['train_loss'].append(train_loss)
-        history['val_loss'].append(val_loss)
-        history['val_acc'].append(val_acc)
-
-        # Print progress
-        print(f"\nEpoch {epoch+1}/{cfg.training.max_epochs}")
         print(f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}")
         print(f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
-        print(f"Val Accuracies - Attractive: {val_accs['attractive']:.4f}, "
-              f"Smart: {val_accs['smart']:.4f}, Trustworthy: {val_accs['trustworthy']:.4f}")
+        print(f"Val Accuracies - Attractive: {val_target_accs['attractive']:.4f}, "
+              f"Smart: {val_target_accs['smart']:.4f}, "
+              f"Trustworthy: {val_target_accs['trustworthy']:.4f}")
 
-        # Early stopping
-        if val_acc > best_val_acc + cfg.training.min_delta:
+        # Save best model
+        if val_acc > best_val_acc:
             best_val_acc = val_acc
-            best_epoch = epoch
             patience_counter = 0
-
-            # Save best model (only LoRA parameters)
             torch.save({
                 'epoch': epoch,
-                'lora_state': {k: v.state_dict() for k, v in lora_layers.items()},
+                'lora_state_dict': {k: v.state_dict() for k, v in lora_layers.items()},
+                'optimizer_state_dict': optimizer.state_dict(),
                 'val_acc': val_acc,
-                'val_accs': val_accs
-            }, run_dir / 'best_model.pth')
+                'cfg': cfg
+            }, run_dir / 'best_model.pt')
         else:
             patience_counter += 1
 
+        # Early stopping
         if patience_counter >= cfg.training.patience:
-            print(f"\nEarly stopping at epoch {epoch+1}")
+            print(f"Early stopping at epoch {epoch+1}")
             break
 
-    # Load best model
-    checkpoint = torch.load(run_dir / 'best_model.pth')
-    for name, layer in lora_layers.items():
-        layer.load_state_dict(checkpoint['lora_state'][name])
+    # Final test evaluation
+    print("\nFinal test evaluation:")
+    test_loss, test_acc, test_target_accs = evaluate(model, test_loader, cfg, device)
+    print(f"Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.4f}")
+    print(f"Test Accuracies - Attractive: {test_target_accs['attractive']:.4f}, "
+          f"Smart: {test_target_accs['smart']:.4f}, "
+          f"Trustworthy: {test_target_accs['trustworthy']:.4f}")
 
-    # Test evaluation
-    test_loss, test_acc, test_accs = evaluate(model, test_loader, cfg, device)
-
-    # Print final results
-    print("\n" + "="*60)
-    print("FINAL RESULTS")
-    print("="*60)
-    print(f"Best Epoch: {best_epoch + 1}")
-    print(f"Best Val Acc: {best_val_acc:.4f}")
-    print(f"\nTest Results:")
-    print(f"  Test Loss: {test_loss:.4f}")
-    print(f"  Test Accuracy: {test_acc:.4f}")
-    print(f"  Attractive: {test_accs['attractive']:.4f}")
-    print(f"  Smart: {test_accs['smart']:.4f}")
-    print(f"  Trustworthy: {test_accs['trustworthy']:.4f}")
-
-    # Save results
+    # Save final results
     results = {
-        'best_epoch': best_epoch + 1,
-        'best_val_acc': best_val_acc,
+        'test_loss': test_loss,
         'test_acc': test_acc,
-        'test_accs': test_accs,
-        'history': history,
+        'test_target_accs': test_target_accs,
+        'best_val_acc': best_val_acc,
         'config': dict(cfg)
     }
 
     with open(run_dir / 'results.json', 'w') as f:
         json.dump(results, f, indent=2)
 
-    print(f"\n✓ Results saved to {run_dir}")
+    print(f"\nResults saved to {run_dir}")
 
 
 if __name__ == "__main__":
