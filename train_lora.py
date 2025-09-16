@@ -90,12 +90,17 @@ class ComparisonDataset(Dataset):
     """Dataset for comparison task using CLIP."""
 
     def __init__(self, data_file, label_file, preprocess, split='train',
-                 val_split=0.1, test_split=0.1, seed=42):
+                 val_split=0.1, test_split=0.1, seed=42, single_user=None):
 
         # Load data
         compare_data = pd.read_excel(data_file)
         compare_labels = pd.read_excel(label_file)
         df = compare_data.merge(compare_labels, left_on='_id', right_on='item_id', how='inner')
+
+        # Filter to single user if specified
+        if single_user is not None:
+            df = df[df['user_id'] == single_user].reset_index(drop=True)
+            print(f"Filtered to user {single_user}: {len(df)} samples")
 
         # Convert labels to binary (2 means first image is preferred)
         self.targets = ['attractive', 'smart', 'trustworthy']
@@ -202,13 +207,12 @@ def train_epoch(model, dataloader, lora_params, optimizer, cfg, device):
         'trustworthy': "a trustworthy person"
     }
 
-    text_features = {}
+    text_tokens = {}
     for target, text in target_texts.items():
-        tokens = clip.tokenize([text]).to(device)
-        with torch.no_grad():
-            text_features[target] = model.encode_text(tokens)
+        text_tokens[target] = clip.tokenize([text]).to(device)
 
-    for batch in tqdm(dataloader, desc="Training"):
+    pbar = tqdm(dataloader, desc="Training")
+    for i, batch in enumerate(pbar):
         # Move to device
         image1 = batch['image1'].to(device)
         image2 = batch['image2'].to(device)
@@ -219,10 +223,12 @@ def train_epoch(model, dataloader, lora_params, optimizer, cfg, device):
         image1_features = model.encode_image(image1)
         image2_features = model.encode_image(image2)
 
-        # Get text features for this batch
-        batch_text_features = torch.cat([
-            text_features[t] for t in targets
-        ], dim=0)
+        # Get text features for this batch (with gradients)
+        text_features_list = []
+        for t in targets:
+            text_feat = model.encode_text(text_tokens[t])
+            text_features_list.append(text_feat)
+        batch_text_features = torch.cat(text_features_list, dim=0)
 
         # Compute probabilities
         probs = compute_similarity_probs(
@@ -239,10 +245,15 @@ def train_epoch(model, dataloader, lora_params, optimizer, cfg, device):
         optimizer.step()
 
         # Statistics
-        total_loss += loss.item()
+        batch_loss = loss.item()
+        total_loss += batch_loss
         preds = probs.argmax(dim=-1)
         correct += (preds == labels).sum().item()
         total += labels.size(0)
+
+        # Update progress bar with running average
+        running_avg_loss = total_loss / (i + 1)
+        pbar.set_postfix({'CE_loss': f'{batch_loss:.4f}', 'avg_loss': f'{running_avg_loss:.4f}'})
 
     return total_loss / len(dataloader), correct / total
 
@@ -263,11 +274,9 @@ def evaluate(model, dataloader, cfg, device):
         'trustworthy': "a trustworthy person"
     }
 
-    text_features = {}
+    text_tokens = {}
     for target, text in target_texts.items():
-        tokens = clip.tokenize([text]).to(device)
-        with torch.no_grad():
-            text_features[target] = model.encode_text(tokens)
+        text_tokens[target] = clip.tokenize([text]).to(device)
 
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating"):
@@ -282,9 +291,11 @@ def evaluate(model, dataloader, cfg, device):
             image2_features = model.encode_image(image2)
 
             # Get text features for this batch
-            batch_text_features = torch.cat([
-                text_features[t] for t in targets
-            ], dim=0)
+            text_features_list = []
+            for t in targets:
+                text_feat = model.encode_text(text_tokens[t])
+                text_features_list.append(text_feat)
+            batch_text_features = torch.cat(text_features_list, dim=0)
 
             # Compute probabilities
             probs = compute_similarity_probs(
@@ -344,13 +355,16 @@ def main(cfg: DictConfig):
     print(f"Added {len(lora_layers)} LoRA adapter layers")
 
     # Create datasets
+    single_user = cfg.data.get('single_user', None)
+
     train_dataset = ComparisonDataset(
         'data/big_compare_data.xlsx',
         'data/big_compare_label.xlsx',
         preprocess, split='train',
         val_split=cfg.data.val_split,
         test_split=cfg.data.test_split,
-        seed=cfg.seed
+        seed=cfg.seed,
+        single_user=single_user
     )
 
     val_dataset = ComparisonDataset(
@@ -359,7 +373,8 @@ def main(cfg: DictConfig):
         preprocess, split='val',
         val_split=cfg.data.val_split,
         test_split=cfg.data.test_split,
-        seed=cfg.seed
+        seed=cfg.seed,
+        single_user=single_user
     )
 
     test_dataset = ComparisonDataset(
@@ -368,7 +383,8 @@ def main(cfg: DictConfig):
         preprocess, split='test',
         val_split=cfg.data.val_split,
         test_split=cfg.data.test_split,
-        seed=cfg.seed
+        seed=cfg.seed,
+        single_user=single_user
     )
 
     print(f"Dataset sizes - Train: {len(train_dataset)}, Val: {len(val_dataset)}, Test: {len(test_dataset)}")
@@ -379,13 +395,15 @@ def main(cfg: DictConfig):
         shuffle=True, num_workers=cfg.data.num_workers
     )
 
+    eval_batch_size = cfg.training.get('eval_batch_size', cfg.training.batch_size * 2)
+
     val_loader = DataLoader(
-        val_dataset, batch_size=cfg.training.batch_size,
+        val_dataset, batch_size=eval_batch_size,
         shuffle=False, num_workers=cfg.data.num_workers
     )
 
     test_loader = DataLoader(
-        test_dataset, batch_size=cfg.training.batch_size,
+        test_dataset, batch_size=eval_batch_size,
         shuffle=False, num_workers=cfg.data.num_workers
     )
 

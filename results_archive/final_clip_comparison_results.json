@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-09-16 01:13:43",
+  "total_time_minutes": 1.1877751270929973,
+  "configuration": "ReLU, LR=0.003, Dropout=0.1, WD=0.0, 200 epochs",
+  "results": [
+    {
+      "model": "ViT-B/16",
+      "description": "Higher resolution (512D)",
+      "attractive_acc": 0.64,
+      "smart_acc": 0.589,
+      "trustworthy_acc": 0.584,
+      "average_acc": 0.604,
+      "attractive_loss": 0.866,
+      "smart_loss": 0.852,
+      "trustworthy_loss": 0.862,
+      "average_loss": 0.86
+    },
+    {
+      "model": "ViT-B/32",
+      "description": "Baseline (512D)",
+      "attractive_acc": 0.632,
+      "smart_acc": 0.581,
+      "trustworthy_acc": 0.587,
+      "average_acc": 0.6,
+      "attractive_loss": 0.86,
+      "smart_loss": 0.847,
+      "trustworthy_loss": 0.901,
+      "average_loss": 0.869
+    },
+    {
+      "model": "ViT-L/14",
+      "description": "Larger model (768D)",
+      "attractive_acc": 0.637,
+      "smart_acc": 0.582,
+      "trustworthy_acc": 0.576,
+      "average_acc": 0.598,
+      "attractive_loss": 0.915,
+      "smart_loss": 0.875,
+      "trustworthy_loss": 0.894,
+      "average_loss": 0.895
+    }
+  ],
+  "best_model": {
+    "model": "ViT-B/16",
+    "description": "Higher resolution (512D)",
+    "attractive_acc": 0.64,
+    "smart_acc": 0.589,
+    "trustworthy_acc": 0.584,
+    "average_acc": 0.604,
+    "attractive_loss": 0.866,
+    "smart_loss": 0.852,
+    "trustworthy_loss": 0.862,
+    "average_loss": 0.86
+  },
+  "baseline_model": {
+    "model": "ViT-B/32",
+    "description": "Baseline (512D)",
+    "attractive_acc": 0.632,
+    "smart_acc": 0.581,
+    "trustworthy_acc": 0.587,
+    "average_acc": 0.6,
+    "attractive_loss": 0.86,
+    "smart_loss": 0.847,
+    "trustworthy_loss": 0.901,
+    "average_loss": 0.869
+  },
+  "summary": {
+    "best_performer": "ViT-B/16",
+    "best_accuracy": 0.604,
+    "baseline_accuracy": 0.6,
+    "improvement_percent": 0.40000000000000036
+  }
+}
