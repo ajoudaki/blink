@@ -1,1 +1,0 @@
-Analysis of labels for CHicago Face Database (CFD)

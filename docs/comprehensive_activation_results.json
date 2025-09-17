@@ -1,0 +1,210 @@
+{
+  "timestamp": "2025-09-15 23:17:08",
+  "results": [
+    {
+      "activation": "relu",
+      "description": "ReLU",
+      "val_accuracy": 0.7259,
+      "test_accuracy": 0.7303,
+      "val_loss": 0.524,
+      "test_loss": 0.5397,
+      "best_epoch": null,
+      "generalization_gap": 0.0043999999999999595
+    },
+    {
+      "activation": "leaky_relu",
+      "description": "LeakyReLU",
+      "val_accuracy": 0.7349,
+      "test_accuracy": 0.7278,
+      "val_loss": 0.5215,
+      "test_loss": 0.5367,
+      "best_epoch": null,
+      "generalization_gap": 0.007099999999999995
+    },
+    {
+      "activation": "gelu",
+      "description": "GELU",
+      "val_accuracy": 0.7337,
+      "test_accuracy": 0.7252,
+      "val_loss": 0.5245,
+      "test_loss": 0.5363,
+      "best_epoch": null,
+      "generalization_gap": 0.008500000000000063
+    },
+    {
+      "activation": "silu",
+      "description": "SiLU/Swish",
+      "val_accuracy": 0.7338,
+      "test_accuracy": 0.7243,
+      "val_loss": 0.5328,
+      "test_loss": 0.5492,
+      "best_epoch": null,
+      "generalization_gap": 0.009499999999999953
+    },
+    {
+      "activation": "relu6",
+      "description": "ReLU6",
+      "val_accuracy": 0.7276,
+      "test_accuracy": 0.7228,
+      "val_loss": 0.5162,
+      "test_loss": 0.5318,
+      "best_epoch": null,
+      "generalization_gap": 0.0048000000000000265
+    },
+    {
+      "activation": "hardswish",
+      "description": "HardSwish",
+      "val_accuracy": 0.7073,
+      "test_accuracy": 0.7142,
+      "val_loss": 0.527,
+      "test_loss": 0.5357,
+      "best_epoch": null,
+      "generalization_gap": 0.006899999999999906
+    },
+    {
+      "activation": "rrelu",
+      "description": "RReLU",
+      "val_accuracy": 0.7237,
+      "test_accuracy": 0.7126,
+      "val_loss": 0.5177,
+      "test_loss": 0.5321,
+      "best_epoch": null,
+      "generalization_gap": 0.011099999999999999
+    },
+    {
+      "activation": "prelu",
+      "description": "PReLU",
+      "val_accuracy": 0.717,
+      "test_accuracy": 0.7108,
+      "val_loss": 0.5271,
+      "test_loss": 0.5446,
+      "best_epoch": null,
+      "generalization_gap": 0.006199999999999983
+    },
+    {
+      "activation": "softplus",
+      "description": "Softplus",
+      "val_accuracy": 0.7167,
+      "test_accuracy": 0.71,
+      "val_loss": 0.5311,
+      "test_loss": 0.5433,
+      "best_epoch": null,
+      "generalization_gap": 0.006700000000000039
+    },
+    {
+      "activation": "mish",
+      "description": "Mish",
+      "val_accuracy": 0.7115,
+      "test_accuracy": 0.7081,
+      "val_loss": 0.5235,
+      "test_loss": 0.541,
+      "best_epoch": null,
+      "generalization_gap": 0.0034000000000000696
+    },
+    {
+      "activation": "logsigmoid",
+      "description": "LogSigmoid",
+      "val_accuracy": 0.711,
+      "test_accuracy": 0.7078,
+      "val_loss": 0.5278,
+      "test_loss": 0.5412,
+      "best_epoch": null,
+      "generalization_gap": 0.0031999999999999806
+    },
+    {
+      "activation": "celu",
+      "description": "CELU",
+      "val_accuracy": 0.6993,
+      "test_accuracy": 0.6964,
+      "val_loss": 0.5429,
+      "test_loss": 0.5581,
+      "best_epoch": null,
+      "generalization_gap": 0.0029000000000000137
+    },
+    {
+      "activation": "elu",
+      "description": "ELU",
+      "val_accuracy": 0.6919,
+      "test_accuracy": 0.6855,
+      "val_loss": 0.5443,
+      "test_loss": 0.5628,
+      "best_epoch": null,
+      "generalization_gap": 0.006399999999999961
+    },
+    {
+      "activation": "selu",
+      "description": "SELU",
+      "val_accuracy": 0.6899,
+      "test_accuracy": 0.6817,
+      "val_loss": 0.5502,
+      "test_loss": 0.5695,
+      "best_epoch": null,
+      "generalization_gap": 0.008199999999999985
+    },
+    {
+      "activation": "tanh",
+      "description": "Tanh",
+      "val_accuracy": 0.6946,
+      "test_accuracy": 0.6799,
+      "val_loss": 0.5554,
+      "test_loss": 0.572,
+      "best_epoch": null,
+      "generalization_gap": 0.014700000000000046
+    },
+    {
+      "activation": "hardtanh",
+      "description": "HardTanh",
+      "val_accuracy": 0.6976,
+      "test_accuracy": 0.6782,
+      "val_loss": 0.5608,
+      "test_loss": 0.5888,
+      "best_epoch": null,
+      "generalization_gap": 0.019399999999999973
+    },
+    {
+      "activation": "sigmoid",
+      "description": "Sigmoid",
+      "val_accuracy": 0.6849,
+      "test_accuracy": 0.6706,
+      "val_loss": 0.5635,
+      "test_loss": 0.5786,
+      "best_epoch": null,
+      "generalization_gap": 0.01429999999999998
+    },
+    {
+      "activation": "hardsigmoid",
+      "description": "HardSigmoid",
+      "val_accuracy": 0.6706,
+      "test_accuracy": 0.6464,
+      "val_loss": 0.5912,
+      "test_loss": 0.6085,
+      "best_epoch": null,
+      "generalization_gap": 0.0242
+    },
+    {
+      "activation": "none",
+      "description": "None (Linear)",
+      "val_accuracy": 0.6456,
+      "test_accuracy": 0.628,
+      "val_loss": 0.6293,
+      "test_loss": 0.6461,
+      "best_epoch": null,
+      "generalization_gap": 0.01759999999999995
+    }
+  ],
+  "best_activation": {
+    "activation": "relu",
+    "description": "ReLU",
+    "val_accuracy": 0.7259,
+    "test_accuracy": 0.7303,
+    "val_loss": 0.524,
+    "test_loss": 0.5397,
+    "best_epoch": null,
+    "generalization_gap": 0.0043999999999999595
+  },
+  "summary": {
+    "total_tested": 19,
+    "best_test_accuracy": 0.7303,
+    "worst_test_accuracy": 0.628
+  }
+}
