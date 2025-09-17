@@ -404,7 +404,8 @@ def load_comparison_data_with_splits(cfg, embeddings_dict, device, val_split, te
                 'y': torch.LongTensor([s['label'] for s in target_train]).to(device),
                 'y_float': torch.FloatTensor([s['label'] for s in target_train]).to(device),
                 'y_np': np.array([s['label'] for s in target_train]),
-                'user': torch.LongTensor([s['user_idx'] for s in target_train]).to(device) if cfg.model.get('use_user_embedding', False) else None
+                'user': torch.LongTensor([s['user_idx'] for s in target_train]).to(device) if cfg.model.get('use_user_embedding', False) else None,
+                'user_np': np.array([s['user_idx'] for s in target_train])
             }
 
         # Validation data
@@ -416,7 +417,8 @@ def load_comparison_data_with_splits(cfg, embeddings_dict, device, val_split, te
                 'y': torch.LongTensor([s['label'] for s in target_val]).to(device),
                 'y_float': torch.FloatTensor([s['label'] for s in target_val]).to(device),
                 'y_np': np.array([s['label'] for s in target_val]),
-                'user': torch.LongTensor([s['user_idx'] for s in target_val]).to(device) if cfg.model.get('use_user_embedding', False) else None
+                'user': torch.LongTensor([s['user_idx'] for s in target_val]).to(device) if cfg.model.get('use_user_embedding', False) else None,
+                'user_np': np.array([s['user_idx'] for s in target_val])
             }
 
         # Test data
@@ -428,7 +430,8 @@ def load_comparison_data_with_splits(cfg, embeddings_dict, device, val_split, te
                 'y': torch.LongTensor([s['label'] for s in target_test]).to(device),
                 'y_float': torch.FloatTensor([s['label'] for s in target_test]).to(device),
                 'y_np': np.array([s['label'] for s in target_test]),
-                'user': torch.LongTensor([s['user_idx'] for s in target_test]).to(device) if cfg.model.get('use_user_embedding', False) else None
+                'user': torch.LongTensor([s['user_idx'] for s in target_test]).to(device) if cfg.model.get('use_user_embedding', False) else None,
+                'user_np': np.array([s['user_idx'] for s in target_test])
             }
 
         print(f"  {target}: {len(train_data.get(target, {'y': []})['y'])} train, "
@@ -490,6 +493,18 @@ def evaluate_model(model, data, cfg, device):
 
                 accuracy = np.mean(pred_binary == true_binary)
 
+                # Track per-user accuracy
+                user_accuracies = {}
+                if 'user_np' in data[target]:
+                    user_indices = data[target]['user_np']
+                    for user_id in np.unique(user_indices):
+                        user_mask = user_indices == user_id
+                        user_acc = np.mean(pred_binary[user_mask] == true_binary[user_mask])
+                        user_accuracies[int(user_id)] = {
+                            'accuracy': float(user_acc),
+                            'n_samples': int(np.sum(user_mask))
+                        }
+
                 # Cross-entropy loss
                 probs = predictions.cpu().numpy()
                 probs = np.clip(probs, 1e-7, 1 - 1e-7)
@@ -501,7 +516,8 @@ def evaluate_model(model, data, cfg, device):
                 results[target] = {
                     'accuracy': accuracy,
                     'ce_loss': ce_loss,
-                    'n_samples': len(data[target]['y'])
+                    'n_samples': len(data[target]['y']),
+                    'user_accuracies': user_accuracies
                 }
 
     return results
@@ -727,6 +743,42 @@ def main(cfg: DictConfig):
 
     print(f"  Average Test Accuracy: {avg_test_acc:.4f}")
     print(f"  Average Test CE Loss: {avg_test_loss:.4f}")
+
+    # Display per-user breakdown if available (for comparison task)
+    if cfg.task_type == 'comparison':
+        print("\n" + "=" * 60)
+        print("PER-USER ACCURACY BREAKDOWN")
+        print("=" * 60)
+
+        # Validation per-user breakdown
+        print("\nVALIDATION SET - Per User:")
+        all_user_ids = set()
+        for target, metrics in results['val_results'].items():
+            if 'user_accuracies' in metrics:
+                all_user_ids.update(metrics['user_accuracies'].keys())
+
+        if all_user_ids:
+            for user_id in sorted(all_user_ids):
+                print(f"\n  User {user_id}:")
+                for target, metrics in results['val_results'].items():
+                    if 'user_accuracies' in metrics and user_id in metrics['user_accuracies']:
+                        user_data = metrics['user_accuracies'][user_id]
+                        print(f"    {target.upper()}: Acc={user_data['accuracy']:.4f} (n={user_data['n_samples']})")
+
+        # Test per-user breakdown
+        print("\nTEST SET - Per User:")
+        all_user_ids = set()
+        for target, metrics in results['test_results'].items():
+            if 'user_accuracies' in metrics:
+                all_user_ids.update(metrics['user_accuracies'].keys())
+
+        if all_user_ids:
+            for user_id in sorted(all_user_ids):
+                print(f"\n  User {user_id}:")
+                for target, metrics in results['test_results'].items():
+                    if 'user_accuracies' in metrics and user_id in metrics['user_accuracies']:
+                        user_data = metrics['user_accuracies'][user_id]
+                        print(f"    {target.upper()}: Acc={user_data['accuracy']:.4f} (n={user_data['n_samples']})")
 
     # Save results
     results_dict = {
