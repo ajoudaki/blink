@@ -14,6 +14,7 @@ venv.bak/
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb_checkpoints/
+*.ipynb
 
 # IDE
 .vscode/
@@ -36,22 +37,33 @@ outputs/
 results/
 multirun/
 
-# Cache files (keep embeddings cache)
-artifacts/cache/*.pkl
-!artifacts/cache/clip_embeddings_cache.pkl
+# Cache files
+artifacts/cache/
+cached_data/
+*.pkl
+*.pickle
 
 # Model files
 *.pth
 *.pt
 *.h5
 *.ckpt
+*.safetensors
+*.bin
+*.model
+*.weights
 
-# Figures
+# Images and Figures
 *.png
 *.jpg
 *.jpeg
 *.pdf
 *.svg
+*.gif
+*.webp
+*.bmp
+*.tiff
+*.ico
 !artifacts/figures/.gitkeep
 
 # Logs
@@ -59,10 +71,20 @@ artifacts/cache/*.pkl
 logs/
 
 # Data files
-data/*.tar.gz
-data/ffhq/
-data/ffhq2/
-data/*.xlsx
+data/
+analysis/data/
+analysis/notebooks/*.png
+analysis/notebooks/*.jpg
+analysis/notebooks/*.jpeg
+analysis/notebooks/*.webp
+analysis/notebooks/*.h5
+demo/demo/
+docs/demo/*.webp
+docs/demo/*.jpg
+docs/demo/*.png
+*.xlsx
+*.xls
+*.csv
 
 # Hydra
 .hydra/
@@ -75,4 +97,30 @@ data/*.xlsx
 *.tmp
 temp/
 tmp/
-logs/
+
+# Compressed files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# NumPy/Scientific data
+*.npy
+*.npz
+
+# Large data files
+*.hdf5
+*.h5py
+
+# Demo and documentation images
+docs/demo_*/
+docs/**/*.png
+docs/**/*.jpg
+docs/**/*.jpeg
+docs/**/*.webp
+
+# Cleanup scripts
+cleanup_repo.sh
+remove_data_folder.sh
