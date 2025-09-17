@@ -1,0 +1,302 @@
+[
+  {
+    "baseline": "two women are smiling and posing for the camera",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "two women smiling and posing for the camera",
+        "embedding_shift": 1.123046875
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "two women smiling and posing for the camera",
+        "embedding_shift": 1.0166015625
+      }
+    },
+    "image_name": "00241.jpg",
+    "original_name": "00241.webp"
+  },
+  {
+    "baseline": "a photo of a woman in a headscar",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "an image of a woman in a headscar",
+        "embedding_shift": 1.08203125
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman in a headscar is shown in this photo",
+        "embedding_shift": 1.1005859375
+      }
+    },
+    "image_name": "10653.jpg",
+    "original_name": "10653.webp"
+  },
+  {
+    "baseline": "a man and a woman holding up an american flag",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a man and a woman holding up an american flag",
+        "embedding_shift": 1.248046875
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "two people posing for the camera with a red, white and blue flower in their hand",
+        "embedding_shift": 1.0537109375
+      }
+    },
+    "image_name": "06347.jpg",
+    "original_name": "06347.webp"
+  },
+  {
+    "baseline": "a woman and a young boy smile for the camera",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman and a young boy smile for the camera",
+        "embedding_shift": 1.068359375
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman and a young boy smiling for the camera",
+        "embedding_shift": 0.97900390625
+      }
+    },
+    "image_name": "29694.jpg",
+    "original_name": "29694.webp"
+  },
+  {
+    "baseline": "a young boy in a red jacket looking at the camera",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a little boy in a red jacket looking at the camera",
+        "embedding_shift": 0.998046875
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a young boy in a red jacket looking at the camera",
+        "embedding_shift": 1.041015625
+      }
+    },
+    "image_name": "29989.jpg",
+    "original_name": "29989.webp"
+  },
+  {
+    "baseline": "a woman with purple hair and horns on her head",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman with purple hair and horns holding a cell",
+        "embedding_shift": 1.2314453125
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman with purple hair and horns on her head",
+        "embedding_shift": 1.0888671875
+      }
+    },
+    "image_name": "15729.jpg",
+    "original_name": "15729.webp"
+  },
+  {
+    "baseline": "a woman with long blonde hair and blue eyes",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman with long blonde hair standing in front of a microphone",
+        "embedding_shift": 1.2158203125
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman with long blonde hair standing in front of a microphone",
+        "embedding_shift": 1.2666015625
+      }
+    },
+    "image_name": "07870.jpg",
+    "original_name": "07870.webp"
+  },
+  {
+    "baseline": "a little girl wearing a colorful necklace",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a little girl wearing a colorful beaded necklace",
+        "embedding_shift": 1.1533203125
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a young boy wearing a colorful beaded necklace",
+        "embedding_shift": 1.1787109375
+      }
+    },
+    "image_name": "04560.jpg",
+    "original_name": "04560.webp"
+  },
+  {
+    "baseline": "a woman wearing sunglasses and holding a book",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman wearing sunglasses and holding a book",
+        "embedding_shift": 1.3701171875
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman wearing sunglasses and holding a book",
+        "embedding_shift": 1.3505859375
+      }
+    },
+    "image_name": "08694.jpg",
+    "original_name": "08694.webp"
+  },
+  {
+    "baseline": "a woman with long black hair and a white shirt",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman with long black hair looking at the camera",
+        "embedding_shift": 1.1884765625
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman with long black hair is looking at the camera",
+        "embedding_shift": 1.140625
+      }
+    },
+    "image_name": "10931.jpg",
+    "original_name": "10931.webp"
+  },
+  {
+    "baseline": "a woman with long black hair smiles at the camera",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman with long hair smiles at the camera",
+        "embedding_shift": 0.8662109375
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman smiling and looking at the camera",
+        "embedding_shift": 0.83740234375
+      }
+    },
+    "image_name": "18531.jpg",
+    "original_name": "18531.webp"
+  },
+  {
+    "baseline": "a man and woman are smiling for the camera",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a man and woman posing for the camera",
+        "embedding_shift": 1.0546875
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a man and woman are smiling for the camera",
+        "embedding_shift": 0.9326171875
+      }
+    },
+    "image_name": "14508.jpg",
+    "original_name": "14508.webp"
+  },
+  {
+    "baseline": "an asian woman with long brown hair and a black jacket",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman with long brown hair and a black jacket",
+        "embedding_shift": 1.125
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman with brown hair and a black jacket",
+        "embedding_shift": 1.0283203125
+      }
+    },
+    "image_name": "18222.jpg",
+    "original_name": "18222.webp"
+  },
+  {
+    "baseline": "a young boy with blonde hair smiling at the camera",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a young boy with blonde hair smiling at the camera",
+        "embedding_shift": 1.40234375
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a young boy in a black shirt smiles at the camera",
+        "embedding_shift": 1.291015625
+      }
+    },
+    "image_name": "15890.jpg",
+    "original_name": "15890.webp"
+  },
+  {
+    "baseline": "a man with glasses and a white shirt",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a young man wearing glasses and smiling at the camera",
+        "embedding_shift": 1.0283203125
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a young man wearing glasses and smiling at the camera",
+        "embedding_shift": 1.0703125
+      }
+    },
+    "image_name": "14383.jpg",
+    "original_name": "14383.webp"
+  },
+  {
+    "baseline": "a young man with blonde hair smiles at the camera",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a young man with blonde hair smiles at the camera",
+        "embedding_shift": 0.9521484375
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a young man with blonde hair smiles at the camera",
+        "embedding_shift": 1.021484375
+      }
+    },
+    "image_name": "08487.jpg",
+    "original_name": "08487.webp"
+  },
+  {
+    "baseline": "a woman with orange paint on her face",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman with orange paint on her face",
+        "embedding_shift": 1.109375
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman with orange paint on her face",
+        "embedding_shift": 1.1220703125
+      }
+    },
+    "image_name": "18761.jpg",
+    "original_name": "18761.webp"
+  },
+  {
+    "baseline": "a man is standing in front of a car",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a man standing in the middle of a road",
+        "embedding_shift": 1.0576171875
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a man is standing in front of a car",
+        "embedding_shift": 1.142578125
+      }
+    },
+    "image_name": "05431.jpg",
+    "original_name": "05431.webp"
+  },
+  {
+    "baseline": "a woman wearing sunglasses and smiling at the camera",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a woman wearing sunglasses and smiling at the camera",
+        "embedding_shift": 1.32421875
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a woman wearing sunglasses and smiling at the camera",
+        "embedding_shift": 1.29296875
+      }
+    },
+    "image_name": "00273.jpg",
+    "original_name": "00273.webp"
+  },
+  {
+    "baseline": "a young boy with his tongue sticking out",
+    "users": {
+      "User 1 (Best, 87.1%)": {
+        "caption": "a young boy with his tongue sticking out",
+        "embedding_shift": 1.22265625
+      },
+      "User 2 (2nd, 84.8%)": {
+        "caption": "a young boy with his tongue sticking out",
+        "embedding_shift": 1.1630859375
+      }
+    },
+    "image_name": "18852.jpg",
+    "original_name": "18852.webp"
+  }
+]
