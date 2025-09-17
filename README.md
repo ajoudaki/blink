@@ -1,5 +1,5 @@
 
-# 🧠 Decoding Subjectivity: An AI That Learns Human Taste
+# 🧠 PRISM: Scalable Personalization in CLIP with PeRsonalIzed Subjective Modeling
 
 What makes a face attractive, trustworthy, or smart? The answer is deeply personal and different for everyone. This project introduces a framework to teach an AI to understand these nuanced, subjective human perceptions.
 
