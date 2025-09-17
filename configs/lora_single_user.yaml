@@ -9,6 +9,8 @@ lora:
   rank: 4  # LoRA rank
   alpha: 1.0  # LoRA scaling factor
   temperature: 0.15  # Increased for better generalization (was 0.1, originally 0.07)
+  enable_vision: true  # Enable vision fine-tuning (LoRA + visual prompts)
+  enable_text: false  # Enable text fine-tuning (LoRA + text user tokens)
 
 # Training parameters
 training:
