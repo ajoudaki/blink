@@ -58,6 +58,12 @@ artifacts/cache/*.pkl
 *.log
 logs/
 
+# Data files
+data/*.tar.gz
+data/ffhq/
+data/ffhq2/
+data/*.xlsx
+
 # Hydra
 .hydra/
 
