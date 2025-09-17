@@ -1,0 +1,33 @@
+# LoRA fine-tuning configuration
+# Clean implementation using CLIP text-image similarity
+
+# CLIP model to use
+clip_model: "ViT-B/32"  # Options: ViT-B/32, ViT-B/16, ViT-L/14
+
+# LoRA specific parameters
+lora:
+  rank: 4  # LoRA rank (lower = fewer parameters)
+  alpha: 1.0  # LoRA scaling factor
+  temperature: 0.07  # Temperature for similarity softmax (CLIP default is 0.07)
+
+# Training parameters
+training:
+  max_epochs: 50  # Maximum epochs
+  batch_size: 32  # Batch size for training
+  learning_rate: 0.0001  # Learning rate for LoRA parameters
+  weight_decay: 0.01  # Weight decay for regularization
+  patience: 5  # Early stopping patience
+  min_delta: 0.001  # Minimum improvement for early stopping
+
+# Data parameters
+data:
+  val_split: 0.1  # Validation split ratio
+  test_split: 0.1  # Test split ratio
+  num_workers: 4  # Number of workers for data loading
+
+# GPU settings
+gpu:
+  device_id: 1  # CUDA device ID
+
+# Random seed
+seed: 42

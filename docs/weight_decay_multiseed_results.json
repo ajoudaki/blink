@@ -1,0 +1,141 @@
+{
+  "timestamp": "2025-09-16 00:31:28",
+  "config": "WD=0.01, Seeds=[42, 123, 456]",
+  "results": {
+    "ViT-B/32": {
+      "raw_results": [
+        {
+          "model": "ViT-B/32",
+          "seed": 42,
+          "val_acc": 0.7239,
+          "test_acc": 0.717,
+          "attractive_test": 0.7304,
+          "smart_test": 0.7017,
+          "trustworthy_test": 0.7188
+        },
+        {
+          "model": "ViT-B/32",
+          "seed": 123,
+          "val_acc": 0.713,
+          "test_acc": 0.7093,
+          "attractive_test": 0.7338,
+          "smart_test": 0.6958,
+          "trustworthy_test": 0.6983
+        },
+        {
+          "model": "ViT-B/32",
+          "seed": 456,
+          "val_acc": 0.7223,
+          "test_acc": 0.7188,
+          "attractive_test": 0.7335,
+          "smart_test": 0.7065,
+          "trustworthy_test": 0.7166
+        }
+      ],
+      "stats": {
+        "val_mean": 0.7197333333333334,
+        "val_std": 0.004805783552716015,
+        "test_mean": 0.7150333333333333,
+        "test_std": 0.004120140234938047,
+        "attractive_mean": 0.7325666666666667,
+        "attractive_std": 0.0015369522511197878,
+        "smart_mean": 0.7013333333333334,
+        "smart_std": 0.004375944342526426,
+        "trustworthy_mean": 0.7112333333333334,
+        "trustworthy_std": 0.00918924492122296,
+        "n_samples": 3
+      },
+      "description": "Baseline (512D)"
+    },
+    "ViT-B/16": {
+      "raw_results": [
+        {
+          "model": "ViT-B/16",
+          "seed": 42,
+          "val_acc": 0.7276,
+          "test_acc": 0.725,
+          "attractive_test": 0.7421,
+          "smart_test": 0.7064,
+          "trustworthy_test": 0.7265
+        },
+        {
+          "model": "ViT-B/16",
+          "seed": 123,
+          "val_acc": 0.7194,
+          "test_acc": 0.7178,
+          "attractive_test": 0.735,
+          "smart_test": 0.7145,
+          "trustworthy_test": 0.704
+        },
+        {
+          "model": "ViT-B/16",
+          "seed": 456,
+          "val_acc": 0.7275,
+          "test_acc": 0.7321,
+          "attractive_test": 0.7609,
+          "smart_test": 0.7108,
+          "trustworthy_test": 0.7245
+        }
+      ],
+      "stats": {
+        "val_mean": 0.7248333333333333,
+        "val_std": 0.003842163742245011,
+        "test_mean": 0.7249666666666666,
+        "test_std": 0.005837998134825167,
+        "attractive_mean": 0.746,
+        "attractive_std": 0.010927335753360332,
+        "smart_mean": 0.7105666666666667,
+        "smart_std": 0.0033109246778237353,
+        "trustworthy_mean": 0.7183333333333333,
+        "trustworthy_std": 0.01016803269511313,
+        "n_samples": 3
+      },
+      "description": "Higher res (512D)"
+    },
+    "ViT-L/14": {
+      "raw_results": [
+        {
+          "model": "ViT-L/14",
+          "seed": 42,
+          "val_acc": 0.709,
+          "test_acc": 0.7168,
+          "attractive_test": 0.7322,
+          "smart_test": 0.6981,
+          "trustworthy_test": 0.7201
+        },
+        {
+          "model": "ViT-L/14",
+          "seed": 123,
+          "val_acc": 0.7253,
+          "test_acc": 0.726,
+          "attractive_test": 0.7528,
+          "smart_test": 0.7232,
+          "trustworthy_test": 0.7021
+        },
+        {
+          "model": "ViT-L/14",
+          "seed": 456,
+          "val_acc": 0.7326,
+          "test_acc": 0.7279,
+          "attractive_test": 0.7428,
+          "smart_test": 0.7225,
+          "trustworthy_test": 0.7184
+        }
+      ],
+      "stats": {
+        "val_mean": 0.7223,
+        "val_std": 0.009865427850157696,
+        "test_mean": 0.7235666666666667,
+        "test_std": 0.00484722142629729,
+        "attractive_mean": 0.7425999999999999,
+        "attractive_std": 0.00841110377219703,
+        "smart_mean": 0.7146,
+        "smart_std": 0.01167076118625799,
+        "trustworthy_mean": 0.7135333333333334,
+        "trustworthy_std": 0.008114322043290035,
+        "n_samples": 3
+      },
+      "description": "Larger (768D)"
+    }
+  }
+}

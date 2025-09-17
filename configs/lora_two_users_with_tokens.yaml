@@ -1,0 +1,52 @@
+# LoRA two-user configuration with labeler-specific tokens
+# Uses top 2 users and adds special tokens to identify each labeler
+
+# CLIP model to use - ViT-B/32 is the basic Vision Transformer
+clip_model: "ViT-B/32"  # Basic ViT model
+
+# LoRA specific parameters
+lora:
+  rank: 4  # LoRA rank
+  alpha: 1.0  # LoRA scaling factor
+  temperature: 0.15  # Temperature for better generalization
+
+# Training parameters
+training:
+  max_epochs: 20  # Extended training
+  batch_size: 384  # Larger batch size
+  learning_rate: 0.0005  # Higher LR for faster convergence
+  weight_decay: 0.01  # Weight decay
+  patience: 5  # Early stopping patience
+  min_delta: 0.001  # Minimum improvement
+  eval_batch_size: 768  # Larger eval batch
+  gradient_checkpointing: false  # Disabled due to CLIP compatibility
+
+# Data parameters
+data:
+  val_split: 0.15  # Validation split
+  test_split: 0.15  # Test split
+  num_workers: 4  # Data loading workers
+  # Note: using top 2 users instead of single_user
+
+# GPU settings
+gpu:
+  device_id: 1
+
+# Random seed
+seed: 42
+
+# Text augmentation templates (randomly selected per batch)
+# The labeler token will be prepended to these templates
+text_templates:
+  - "{}"  # Just the bare word (attractive, smart, trustworthy)
+  - "a {} person"
+  - "this person looks {}"
+  - "this person is {}"
+  - "this person appears {}"
+
+# Image augmentation settings
+enable_image_augmentation: false  # Disabled - only using text augmentation
+
+# Performance optimizations
+cache_images: false  # Cache preprocessed images in memory (set true if RAM allows)
+use_mixed_precision: false  # Use fp16 mixed precision training for speed

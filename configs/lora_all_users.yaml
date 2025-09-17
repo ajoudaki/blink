@@ -1,0 +1,30 @@
+# Configuration for LoRA fine-tuning with all users (special tokens)
+
+clip_model: "ViT-B/32"  # CLIP model variant
+
+lora:
+  rank: 4
+  alpha: 1.0
+  temperature: 0.15  # Temperature for cosine similarity
+
+data:
+  train_file: "data/big_label.xlsx"
+  val_file: "data/big_label.xlsx"  # Will split internally
+  test_file: "data/big_label.xlsx"  # Will split internally
+  image_dir: "data/ffhq/src"
+  num_workers: 4
+  min_samples_per_user: 100  # Minimum samples required per user
+
+training:
+  batch_size: 128  # Reduced batch size due to more users
+  eval_batch_size: 256
+  lr: 1e-4
+  max_epochs: 10  # Reduced epochs for faster initial testing
+
+# Text templates for augmentation
+text_templates:
+  - "{}"  # Just the bare word
+  - "a {} person"
+  - "this person looks {}"
+  - "this person is {}"
+  - "this person appears {}"
