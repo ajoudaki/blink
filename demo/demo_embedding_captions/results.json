@@ -1,0 +1,207 @@
+[
+  {
+    "pair_num": 1,
+    "img1_name": "pair1_img1.jpg",
+    "img2_name": "pair1_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a man standing in front of a white wall",
+        "user1": "a person standing in front of a fire place",
+        "user2": "a man wearing a blue shirt sitting on top of a wooden bench",
+        "shift1": 1.0380859375,
+        "shift2": 1.35546875
+      },
+      "img2": {
+        "baseline": "a man standing in front of a graffiti-covered wall with a surfboard",
+        "user1": "a man standing on top of a wooden table",
+        "user2": "a man sitting on top of a wooden table next to a dog",
+        "shift1": 1.21875,
+        "shift2": 1.1103515625
+      }
+    }
+  },
+  {
+    "pair_num": 2,
+    "img1_name": "pair2_img1.jpg",
+    "img2_name": "pair2_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "smart": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a white and black and a yellow and black and a white and black and a yellow and black and a yellow and black and a yellow and black",
+        "user1": "a man in a black t-shirt is in front of a blue and white double decker bus",
+        "user2": "a large white table topped with two black and white trunks",
+        "shift1": 1.4140625,
+        "shift2": 1.28515625
+      },
+      "img2": {
+        "baseline": "a person standing in front of a red brick building",
+        "user1": "a woman is holding a large piece of luggage",
+        "user2": "a man standing on top of a wooden bench next to a pile of mail",
+        "shift1": 1.357421875,
+        "shift2": 1.248046875
+      }
+    }
+  },
+  {
+    "pair_num": 3,
+    "img1_name": "pair3_img1.jpg",
+    "img2_name": "pair3_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "smart": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a row of blue and white umbrellas sitting on top of a building",
+        "user1": "a small child is standing in front of a large white object",
+        "user2": "a small group of people holding up a colorful green and white object",
+        "shift1": 1.3564453125,
+        "shift2": 1.279296875
+      },
+      "img2": {
+        "baseline": "a person sitting on a park bench with a camera",
+        "user1": "a man standing next to a wooden table holding a plate of food",
+        "user2": "a person standing on top of a wooden bench",
+        "shift1": 1.1962890625,
+        "shift2": 1.16015625
+      }
+    }
+  },
+  {
+    "pair_num": 4,
+    "img1_name": "pair4_img1.jpg",
+    "img2_name": "pair4_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a person sitting on top of a wooden table",
+        "user1": "a vintage photo of a couple of people on a boat",
+        "user2": "a person standing on top of a lush green field",
+        "shift1": 1.16015625,
+        "shift2": 1.2705078125
+      },
+      "img2": {
+        "baseline": "a woman standing in front of a green wall",
+        "user1": "a vintage photo of a vintage photo of a vintage photo of a vintage photo",
+        "user2": "a large group of brown and white animals standing on top of a green field",
+        "shift1": 1.0341796875,
+        "shift2": 1.107421875
+      }
+    }
+  },
+  {
+    "pair_num": 5,
+    "img1_name": "pair5_img1.jpg",
+    "img2_name": "pair5_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      },
+      "smart": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      },
+      "trustworthy": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      }
+    },
+    "user1_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 2
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a large black and white bird sitting on top of a wooden table",
+        "user1": "a room filled with a table and chairs next to a wall",
+        "user2": "a man standing in front of a row of white and blue striped umbrellas",
+        "shift1": 1.12890625,
+        "shift2": 1.1748046875
+      },
+      "img2": {
+        "baseline": "a person on a skateboard in the middle of a crowd of people",
+        "user1": "a large group of people standing in front of a wall",
+        "user2": "a wooden ledge with a view of a large group of animals",
+        "shift1": 1.392578125,
+        "shift2": 1.427734375
+      }
+    }
+  }
+]

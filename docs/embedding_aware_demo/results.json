@@ -1,0 +1,327 @@
+[
+  {
+    "pair_num": 1,
+    "img1_name": "pair1_img1.jpg",
+    "img2_name": "pair1_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a person",
+        "user1": "a person in the photo",
+        "user2": "an older mysterious person with distinctive features",
+        "attr_changes_user1": {
+          "attractive": -0.03515625,
+          "smart": -0.049072265625,
+          "trustworthy": -0.046142578125,
+          "emotion": -0.048095703125,
+          "age": -0.0977783203125
+        },
+        "attr_changes_user2": {
+          "attractive": -0.14111328125,
+          "smart": -0.19921875,
+          "trustworthy": -0.16455078125,
+          "emotion": -0.15625,
+          "age": -0.2138671875
+        }
+      },
+      "img2": {
+        "baseline": "a person",
+        "user1": "an older person with distinctive features",
+        "user2": "an older person in the photo",
+        "attr_changes_user1": {
+          "attractive": -0.08856201171875,
+          "smart": -0.1279296875,
+          "trustworthy": -0.11541748046875,
+          "emotion": -0.136474609375,
+          "age": -0.1500244140625
+        },
+        "attr_changes_user2": {
+          "attractive": -0.0587158203125,
+          "smart": -0.09271240234375,
+          "trustworthy": -0.07708740234375,
+          "emotion": -0.09423828125,
+          "age": -0.11572265625
+        }
+      }
+    }
+  },
+  {
+    "pair_num": 2,
+    "img1_name": "pair2_img1.jpg",
+    "img2_name": "pair2_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "smart": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a person",
+        "user1": "an older person with distinctive features",
+        "user2": "an older person with distinctive features",
+        "attr_changes_user1": {
+          "attractive": -0.150390625,
+          "smart": -0.1796875,
+          "trustworthy": -0.1405029296875,
+          "emotion": -0.165771484375,
+          "age": -0.172607421875
+        },
+        "attr_changes_user2": {
+          "attractive": -0.135498046875,
+          "smart": -0.16015625,
+          "trustworthy": -0.125244140625,
+          "emotion": -0.146484375,
+          "age": -0.1456298828125
+        }
+      },
+      "img2": {
+        "baseline": "a person",
+        "user1": "an older person with distinctive features",
+        "user2": "an older person with distinctive features",
+        "attr_changes_user1": {
+          "attractive": -0.10345458984375,
+          "smart": -0.1533203125,
+          "trustworthy": -0.146484375,
+          "emotion": -0.1588134765625,
+          "age": -0.1881103515625
+        },
+        "attr_changes_user2": {
+          "attractive": -0.07879638671875,
+          "smart": -0.139404296875,
+          "trustworthy": -0.1185302734375,
+          "emotion": -0.12493896484375,
+          "age": -0.1700439453125
+        }
+      }
+    }
+  },
+  {
+    "pair_num": 3,
+    "img1_name": "pair3_img1.jpg",
+    "img2_name": "pair3_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "smart": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a person",
+        "user1": "an older person with distinctive features",
+        "user2": "an older person with distinctive features",
+        "attr_changes_user1": {
+          "attractive": -0.12432861328125,
+          "smart": -0.1683349609375,
+          "trustworthy": -0.1326904296875,
+          "emotion": -0.145263671875,
+          "age": -0.1962890625
+        },
+        "attr_changes_user2": {
+          "attractive": -0.120361328125,
+          "smart": -0.1693115234375,
+          "trustworthy": -0.13525390625,
+          "emotion": -0.11724853515625,
+          "age": -0.188232421875
+        }
+      },
+      "img2": {
+        "baseline": "a person",
+        "user1": "an older mysterious person in the photo",
+        "user2": "an older person in the photo",
+        "attr_changes_user1": {
+          "attractive": -0.148193359375,
+          "smart": -0.18359375,
+          "trustworthy": -0.1563720703125,
+          "emotion": -0.2115478515625,
+          "age": -0.2017822265625
+        },
+        "attr_changes_user2": {
+          "attractive": -0.125,
+          "smart": -0.1566162109375,
+          "trustworthy": -0.13330078125,
+          "emotion": -0.1871337890625,
+          "age": -0.182861328125
+        }
+      }
+    }
+  },
+  {
+    "pair_num": 4,
+    "img1_name": "pair4_img1.jpg",
+    "img2_name": "pair4_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a person",
+        "user1": "an older person in the photo",
+        "user2": "an older mysterious person with distinctive features",
+        "attr_changes_user1": {
+          "attractive": -0.146484375,
+          "smart": -0.135986328125,
+          "trustworthy": -0.1259765625,
+          "emotion": -0.1370849609375,
+          "age": -0.127685546875
+        },
+        "attr_changes_user2": {
+          "attractive": -0.170166015625,
+          "smart": -0.202880859375,
+          "trustworthy": -0.178466796875,
+          "emotion": -0.1982421875,
+          "age": -0.1939697265625
+        }
+      },
+      "img2": {
+        "baseline": "a person",
+        "user1": "a person in the photo",
+        "user2": "an older person in the photo",
+        "attr_changes_user1": {
+          "attractive": -0.0435791015625,
+          "smart": -0.03662109375,
+          "trustworthy": -0.065185546875,
+          "emotion": -0.0648193359375,
+          "age": -0.0460205078125
+        },
+        "attr_changes_user2": {
+          "attractive": -0.0899658203125,
+          "smart": -0.101318359375,
+          "trustworthy": -0.1026611328125,
+          "emotion": -0.12274169921875,
+          "age": -0.1141357421875
+        }
+      }
+    }
+  },
+  {
+    "pair_num": 5,
+    "img1_name": "pair5_img1.jpg",
+    "img2_name": "pair5_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      },
+      "smart": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      },
+      "trustworthy": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      }
+    },
+    "user1_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 2
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a person",
+        "user1": "a person in the photo",
+        "user2": "an older mysterious person in the photo",
+        "attr_changes_user1": {
+          "attractive": -0.142333984375,
+          "smart": -0.1259765625,
+          "trustworthy": -0.0943603515625,
+          "emotion": -0.125244140625,
+          "age": -0.08740234375
+        },
+        "attr_changes_user2": {
+          "attractive": -0.18359375,
+          "smart": -0.192626953125,
+          "trustworthy": -0.153076171875,
+          "emotion": -0.179931640625,
+          "age": -0.1644287109375
+        }
+      },
+      "img2": {
+        "baseline": "a person",
+        "user1": "an older mysterious person with distinctive features",
+        "user2": "an older mysterious person with distinctive features",
+        "attr_changes_user1": {
+          "attractive": -0.148193359375,
+          "smart": -0.156005859375,
+          "trustworthy": -0.1505126953125,
+          "emotion": -0.187744140625,
+          "age": -0.17236328125
+        },
+        "attr_changes_user2": {
+          "attractive": -0.1640625,
+          "smart": -0.200927734375,
+          "trustworthy": -0.177978515625,
+          "emotion": -0.19189453125,
+          "age": -0.2020263671875
+        }
+      }
+    }
+  }
+]

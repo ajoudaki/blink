@@ -1,0 +1,360 @@
+[
+  {
+    "pair_num": 1,
+    "img1_name": "pair1_img1.jpg",
+    "img2_name": "pair1_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a woman with red hair and sunglasses smiling",
+        "user1": "a woman with red hair and sunglasses smiles at the camera",
+        "user2": "a woman with red hair and sunglasses smiles at the camera"
+      },
+      "img2": {
+        "baseline": "a woman holding a baby in her arms",
+        "user1": "a woman holding a baby in her arms",
+        "user2": "a woman with a baby in her arms"
+      }
+    }
+  },
+  {
+    "pair_num": 2,
+    "img1_name": "pair2_img1.jpg",
+    "img2_name": "pair2_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "smart": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a woman wearing sunglasses and smiling at the camera",
+        "user1": "a woman in sunglasses stands next to another woman",
+        "user2": "a woman wearing sunglasses and smiling for the camera"
+      },
+      "img2": {
+        "baseline": "a woman with long brown hair and blue eyes smiles at the camera",
+        "user1": "a woman with long brown hair and blue eyes smiles at the camera",
+        "user2": "a woman with long hair smiling at the camera"
+      }
+    }
+  },
+  {
+    "pair_num": 3,
+    "img1_name": "pair3_img1.jpg",
+    "img2_name": "pair3_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "smart": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a woman in a suit and tie looking at the camera",
+        "user1": "a woman with long black hair and a white shirt",
+        "user2": "a woman in a suit and tie looking at the camera"
+      },
+      "img2": {
+        "baseline": "a woman with long blonde hair and blue eyes",
+        "user1": "a woman with long blonde hair standing in front of a tree",
+        "user2": "a woman with long blonde hair and blue eyes"
+      }
+    }
+  },
+  {
+    "pair_num": 4,
+    "img1_name": "pair4_img1.jpg",
+    "img2_name": "pair4_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a man with long black hair and a black jacket",
+        "user1": "a man with long hair sitting on a couch",
+        "user2": "a man with long hair holding a glass of wine"
+      },
+      "img2": {
+        "baseline": "a man in a white shirt is looking at the camera",
+        "user1": "a man in a white shirt is looking into the camera",
+        "user2": "a man in a white shirt is looking at the camera"
+      }
+    }
+  },
+  {
+    "pair_num": 5,
+    "img1_name": "pair5_img1.jpg",
+    "img2_name": "pair5_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      },
+      "smart": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      },
+      "trustworthy": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      }
+    },
+    "user1_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 2
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a man with black hair and a white shirt",
+        "user1": "a man with black hair and a white shirt",
+        "user2": "a man with black hair and a white shirt"
+      },
+      "img2": {
+        "baseline": "a man in a black jacket standing next to the water",
+        "user1": "a man standing in front of a body of water",
+        "user2": "a man in a black jacket standing next to a body of water"
+      }
+    }
+  },
+  {
+    "pair_num": 6,
+    "img1_name": "pair6_img1.jpg",
+    "img2_name": "pair6_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a woman with blonde hair and blue eyes",
+        "user1": "a woman with blonde hair and blue eyes",
+        "user2": "a woman with blonde hair and blue eyes"
+      },
+      "img2": {
+        "baseline": "a woman with long black hair and earrings",
+        "user1": "a woman with long black hair and a blue shirt",
+        "user2": "a woman with long black hair and large hoop earrings"
+      }
+    }
+  },
+  {
+    "pair_num": 7,
+    "img1_name": "pair7_img1.jpg",
+    "img2_name": "pair7_img2.jpg",
+    "disagreements": {
+      "attractive": {
+        "user1_choice": 1,
+        "user2_choice": 2
+      },
+      "smart": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      },
+      "trustworthy": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 2,
+      "trustworthy": 2
+    },
+    "user2_labels": {
+      "attractive": 2,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a man wearing a hard hat and a red hard hat",
+        "user1": "a man wearing a red hard hat and a green shirt",
+        "user2": "a man wearing a red hard hat with a badge on it"
+      },
+      "img2": {
+        "baseline": "a woman holding a baby in her arms",
+        "user1": "a woman holding a baby in her arms",
+        "user2": "a woman holding a baby in her arms"
+      }
+    }
+  },
+  {
+    "pair_num": 8,
+    "img1_name": "pair8_img1.jpg",
+    "img2_name": "pair8_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a woman wearing sunglasses and looking at the camera",
+        "user1": "a woman wearing sunglasses is looking at the camera",
+        "user2": "a woman wearing sunglasses and looking into the camera"
+      },
+      "img2": {
+        "baseline": "a young girl with long brown hair smiles at the camera",
+        "user1": "a young girl with long brown hair smiles at the camera",
+        "user2": "a young girl with long brown hair smiles at the camera"
+      }
+    }
+  },
+  {
+    "pair_num": 9,
+    "img1_name": "pair9_img1.jpg",
+    "img2_name": "pair9_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      }
+    },
+    "user1_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 2
+    },
+    "user2_labels": {
+      "attractive": 1,
+      "smart": 1,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a woman with long brown hair and blue eyes",
+        "user1": "a woman with long hair wearing a black top",
+        "user2": "a woman with long brown hair and blue eyes"
+      },
+      "img2": {
+        "baseline": "a woman smiling with her eyes closed",
+        "user1": "a woman smiling with her eyes closed",
+        "user2": "a woman smiling with her eyes closed"
+      }
+    }
+  },
+  {
+    "pair_num": 10,
+    "img1_name": "pair10_img1.jpg",
+    "img2_name": "pair10_img2.jpg",
+    "disagreements": {
+      "trustworthy": {
+        "user1_choice": 2,
+        "user2_choice": 1
+      }
+    },
+    "user1_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 2
+    },
+    "user2_labels": {
+      "attractive": 2,
+      "smart": 2,
+      "trustworthy": 1
+    },
+    "captions": {
+      "img1": {
+        "baseline": "a bearded man with glasses and a beard",
+        "user1": "a bearded man with glasses and a beard",
+        "user2": "a man with a beard wearing glasses and a blue jacket"
+      },
+      "img2": {
+        "baseline": "two men wearing sunglasses and smiling at the camera",
+        "user1": "two men wearing sunglasses and smiling at the camera",
+        "user2": "two men wearing sunglasses and smiling at the camera"
+      }
+    }
+  }
+]
